@@ -16,16 +16,6 @@ gojs-angular can be installed via NPM. This package has peer dependencies on GoJ
 npm install --save gojs-angular
 ```
 
-## Making Changes
-
-If you want to change how the GoJS / Angular components are implemented, you will need to edit the files in projects/gojs-angular, then, from the main directory, run
-
-```bash
-npm run package
-```
-
-which will create a new package in the folder, dist/angular-gojs, for you to use.
-
 ## Usage
 
 This package provides three components - DiagramComponent, PaletteComponent, and OverviewComponent - corresponding to the related GoJS classes.

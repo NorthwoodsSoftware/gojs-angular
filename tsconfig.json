@@ -17,6 +17,14 @@
     "lib": [
       "es2018",
       "dom"
-    ]
+    ],
+    "paths": {
+      "gojs-angular": [
+        "dist/gojs-angular"
+      ],
+      "gojs-angular/*": [
+        "dist/gojs-angular/*"
+      ]
+    }
   }
 }
