@@ -3,6 +3,7 @@
 ### By Northwoods Software for [GoJS 2.1](https://gojs.net)
 
 This project provides Angular components for [GoJS](https://gojs.net/latest/index.html) Diagrams, Palettes, and Overviews to simplify usage of GoJS within an Angular application.
+The implementation for these components is inside the projects/gojs-angular folder.
 See the [gojs-angular-basic project](https://github.com/NorthwoodsSoftware/gojs-angular-basic) for example usage and the
 [Intro page on using GoJS with Angular](https://gojs.net/latest/intro/angular.html) for more information.
 
