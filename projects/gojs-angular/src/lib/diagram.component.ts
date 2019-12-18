@@ -31,7 +31,7 @@ export class DiagramComponent {
   // event emitter -- fires when diagram model changes. Capture this emitted event in parent component
   @Output() public modelChange: EventEmitter<go.IncrementalData> = new EventEmitter<go.IncrementalData>();
 
-  @ViewChild('ngDiagram') public diagramDiv: ElementRef;
+  @ViewChild('ngDiagram', { static: true }) public diagramDiv: ElementRef;
   public diagram: go.Diagram = null;
 
   // differs for array inputs (node / link data arrays)

@@ -16,7 +16,7 @@ export class OverviewComponent {
   // The Diagram to observe with the Overview
   @Input() public observedDiagram: go.Diagram = null;
 
-  @ViewChild('ngOverview') public overviewDiv: ElementRef;
+  @ViewChild('ngOverview', { static: true }) public overviewDiv: ElementRef;
 
   // The Overview itself
   public overview: go.Overview | null = null;

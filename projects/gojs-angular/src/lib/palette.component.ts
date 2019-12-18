@@ -30,7 +30,7 @@ export class PaletteComponent {
   // event emitter -- fires when palette model changes. Capture this emitted event in parent component
   @Output() public modelChange: EventEmitter<go.IncrementalData> = new EventEmitter<go.IncrementalData>();
 
-  @ViewChild('ngPalette') public paletteDiv: ElementRef;
+  @ViewChild('ngPalette', { static: true }) public paletteDiv: ElementRef;
 
   // The Palette itself
   public palette: go.Palette | null = null;
