@@ -53,7 +53,9 @@ export class DiagramComponent {
 
   public ngOnInit() {
     // initialize the differ that listens for changes to modelData object
-    this._mdDiffer = this._kvdiffers.find(this.modelData).create();
+    if (this.modelData) {
+      this._mdDiffer = this._kvdiffers.find(this.modelData).create();
+    }
   } // end ngOnInit
 
   /**
@@ -117,7 +119,10 @@ export class DiagramComponent {
   public ngDoCheck() {
     const nodeDataArrayChanges = this._ndaDiffer.diff(this.nodeDataArray);
     const linkDataArrayChanges = this._ldaDiffer.diff(this.linkDataArray);
-    const modelDataChanges = this._mdDiffer.diff(this.modelData);
+    let modelDataChanges = null;
+    if (this._mdDiffer) {
+      modelDataChanges = this._mdDiffer.diff(this.modelData);
+    }
     if (nodeDataArrayChanges || linkDataArrayChanges || modelDataChanges) {
       this.updateFromAppData();
     }
