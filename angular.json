@@ -138,6 +138,9 @@
       "prefix": "lib",
       "architect": {
         "build": {
+          "configurations": {
+            "production": {}
+          },
           "builder": "@angular-devkit/build-ng-packagr:build",
           "options": {
             "tsConfig": "projects/gojs-angular/tsconfig.lib.json",
