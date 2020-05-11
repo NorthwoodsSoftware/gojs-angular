@@ -30,6 +30,7 @@ Feel free to use these components as examples for setting up your own Angular co
   [linkDataArray]='diagramLinkDataArray'
   [modelData]='diagramModelData'
   (modelChange)='paletteModelChange($event)'
+  [skipsDiagramUpdate]='skipsDiagramUpdate'
 ></gojs-diagram>
 
 <gojs-palette
@@ -134,6 +135,9 @@ public diagramModelChange = function(changes: go.IncrementalData) {
 ```
 
 Notice the use of the three functions of the DataSyncService, which is included with this package to make syncing your app-level data with Diagram / Palette data simple.
+
+#### Optional - skipsDiagramUpdate (DiagramComponent only)
+Specifies whether the component should skip updating, often set when updating state from a GoJS model change.
 
 #### observedDiagram (OverviewComponent only)
 Specifies the go.Diagram which the Overview will observe.
