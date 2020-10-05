@@ -239,30 +239,4 @@ export class DiagramComponent {
 
   } // end ngDoCheck
 
-  /**
-   * Some input property has changed (or its contents changed) in parent component.
-   * Update diagram data accordingly
-   */
-  // public updateFromAppData() {
-  //   if (!this.diagram) return;
-  //   const model = this.diagram.model;
-
-  //   // don't need model change listener while performing known data updates
-  //   if (this.modelChangedListener !== null) model.removeChangedListener(this.modelChangedListener);
-
-  //   model.startTransaction('update data');
-  //   model.mergeNodeDataArray(model.cloneDeep(this.nodeDataArray));
-  //   if (this.linkDataArray && model instanceof go.GraphLinksModel) {
-  //     model.mergeLinkDataArray(model.cloneDeep(this.linkDataArray));
-  //   }
-  //   if (this.modelData) {
-  //     model.assignAllDataProperties(model.modelData, this.modelData);
-  //   }
-  //   model.commitTransaction('update data');
-
-  //   // reset the model change listener
-  //   if (this.modelChangedListener !== null) model.addChangedListener(this.modelChangedListener);
-
-  // }
-
 }
