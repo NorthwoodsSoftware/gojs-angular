@@ -124,9 +124,6 @@ export class DiagramComponent {
    */
   public ngDoCheck() {
 
-
-    
-    
     if (!this.diagram) return;
     if (!this.diagram.model) return;
 
@@ -140,6 +137,7 @@ export class DiagramComponent {
 
     if (this.skipsDiagramUpdate) return;
 
+    // helper function
     function compareObjs(obj1, obj2) {
       // Loop through properties in object 1
       for (const p in obj1) {
@@ -171,6 +169,8 @@ export class DiagramComponent {
       if (!dc.diagram || !dc.diagram.model) return;
 
       if (kvchanges) {
+
+        // handle added nodes / links
         kvchanges.forEachAddedItem((r: KeyValueChangeRecord<string, any>) => {
           switch (str) {
             case "n": {
@@ -184,36 +184,51 @@ export class DiagramComponent {
             }
           }
         });
+
+        // handle removed nodes / links
         kvchanges.forEachRemovedItem((r: KeyValueChangeRecord<string, any>) => {
           switch (str) {
             case "n": {
-              var node = dc.diagram.findNodesByExample(r.previousValue).first();
-              dc.diagram.remove(node);
+              let m = dc.diagram.model;
+              var keyPropName = m.nodeKeyProperty.toString();
+              var node = dc.diagram.findNodeForKey(r.previousValue[keyPropName]);
+              if (node) {
+                dc.diagram.remove(node);
+              }
               break;
             }
             case "l": {
-              var link = dc.diagram.findLinksByExample(r.previousValue).first();
-              dc.diagram.remove(link);
+              let m = <go.GraphLinksModel>dc.diagram.model;
+              var keyPropName = m.linkKeyProperty.toString();
+              var link = dc.diagram.findLinkForKey(r.previousValue[keyPropName]);
+              if (link) {
+                dc.diagram.remove(link);
+              }
               break;
             }
           }
         });
 
+        // handle changed data for nodes / links
         kvchanges.forEachChangedItem((r: KeyValueChangeRecord<string, any>) => {
-          const curVal = r.currentValue;
-          const pVal = r.previousValue;
           
           // ensure "changes" to array / object / enumerable data properties are legit
-          const sameVals = compareObjs(curVal, pVal);
+          const sameVals = compareObjs(r.currentValue, r.previousValue);
+
+          // update proper data object for node or link
           if (!sameVals) {
             switch (str) {
               case "n": {
-                var node = dc.diagram.findNodesByExample(r.previousValue).first();
+                let m = dc.diagram.model;
+                var keyPropName = m.nodeKeyProperty.toString();
+                var node = dc.diagram.findNodeForKey(r.previousValue[keyPropName]);
                 dc.diagram.model.assignAllDataProperties(node.data, r.currentValue);
                 break;
               }
               case "l": {
-                var link = dc.diagram.findLinksByExample(r.previousValue).first();
+                let m = <go.GraphLinksModel>dc.diagram.model;
+                var keyPropName = m.linkKeyProperty.toString();
+                var link = dc.diagram.findLinkForKey(r.previousValue[keyPropName]);
                 dc.diagram.model.assignAllDataProperties(link.data, r.currentValue);
                 break;
               }
@@ -229,7 +244,6 @@ export class DiagramComponent {
     if (this.modelChangedListener !== null) this.diagram.model.removeChangedListener(this.modelChangedListener);
 
     this.diagram.model.startTransaction('update data');
-    // var nodeDiffs = this._ndaDiffer.diff(this.nodeDataArray);
     mergeChanges(nodeDiffs, "n");
     mergeChanges(linkDiffs, "l");
     this.diagram.model.assignAllDataProperties(this.diagram.model.modelData, this.modelData);
