@@ -222,14 +222,18 @@ export class DiagramComponent {
                 let m = dc.diagram.model;
                 var keyPropName = m.nodeKeyProperty.toString();
                 var node = dc.diagram.findNodeForKey(r.previousValue[keyPropName]);
-                dc.diagram.model.assignAllDataProperties(node.data, r.currentValue);
+                if (node) {
+                  dc.diagram.model.assignAllDataProperties(node.data, r.currentValue);
+                }
                 break;
               }
               case "l": {
                 let m = <go.GraphLinksModel>dc.diagram.model;
                 var keyPropName = m.linkKeyProperty.toString();
                 var link = dc.diagram.findLinkForKey(r.previousValue[keyPropName]);
-                dc.diagram.model.assignAllDataProperties(link.data, r.currentValue);
+                if (link) {
+                  dc.diagram.model.assignAllDataProperties(link.data, r.currentValue);
+                }
                 break;
               }
             }
