@@ -150,4 +150,8 @@ export class PaletteComponent {
 
   }
 
+  public ngOnDestroy() {
+    this.palette.div = null; // removes event listeners
+  }
+
 }

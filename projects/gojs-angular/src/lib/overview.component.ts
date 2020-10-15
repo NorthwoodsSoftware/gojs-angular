@@ -64,4 +64,8 @@ export class OverviewComponent {
     }
   }
 
+  public ngOnDestroy() {
+    this.overview.div = null; // removes event listeners
+  }
+
 }

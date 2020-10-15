@@ -257,4 +257,7 @@ export class DiagramComponent {
 
   } // end ngDoCheck
 
+  public ngOnDestroy() {
+    this.diagram.div = null; // removes event listeners
+  }
 }
