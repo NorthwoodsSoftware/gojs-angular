@@ -40,7 +40,7 @@ Feel free to use these components as examples for setting up your own Angular co
   [nodeDataArray]='diagramNodeDataArray'
   [linkDataArray]='diagramLinkDataArray'
   [modelData]='diagramModelData'
-  (modelChange)='paletteModelChange($event)'
+  (modelChange)='diagramModelChange($event)'
   [skipsDiagramUpdate]='skipsDiagramUpdate'
 ></gojs-diagram>
 
@@ -48,6 +48,8 @@ Feel free to use these components as examples for setting up your own Angular co
   [divClassName]='myPaletteDiv'
   [initPalette]='initPalette'
   [nodeDataArray]='paletteNodeData'
+  (modelChange)='paletteModelChange($event)'
+  [skipsPaletteUpdate]='skipsPaletteUpdate'
 ></gojs-palette>
 
 <gojs-overview
@@ -132,7 +134,7 @@ linkDataArray: [
 #### Optional - modelData (DiagramComponent and PaletteComponent only)
 Specifies a modelData object for the Diagram's model.
 
-#### onModelChange (DiagramComponent and PaletteComponent only)
+#### modelChange (DiagramComponent and PaletteComponent only)
 Specifies a function to be called when a GoJS transaction has completed.
 This function will typically be responsible for updating app-level state.
 
@@ -148,7 +150,10 @@ public diagramModelChange = function(changes: go.IncrementalData) {
 Notice the use of the three functions of the DataSyncService, which is included with this package to make syncing your app-level data with Diagram / Palette data simple.
 
 #### Optional - skipsDiagramUpdate (DiagramComponent only)
-Specifies whether the component should skip updating, often set when updating state from a GoJS model change.
+Specifies whether the Diagram component should skip updating, often set when updating state from a GoJS model change.
+
+#### Optional - skipsPaletteUpdate (DiagramComponent only)
+Specifies whether the Palette component should skip updating, often set when updating state from a GoJS model change.
 
 #### observedDiagram (OverviewComponent only)
 Specifies the go.Diagram which the Overview will observe.
