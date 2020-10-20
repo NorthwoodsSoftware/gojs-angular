@@ -1,5 +1,6 @@
-import { Component, ElementRef, EventEmitter, Input, IterableDiffers, KeyValueDiffer, KeyValueDiffers, NgZone, Output, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, KeyValueDiffer, KeyValueDiffers, NgZone, Output, ViewChild } from '@angular/core';
 import * as go from 'gojs';
+import { DiagramComponent } from './diagram.component';
 @Component({
   selector: 'gojs-palette',
   template: '<div #ngPalette [className]=divClassName></div>'
@@ -24,8 +25,10 @@ export class PaletteComponent {
   // Palette div class name. Use this name to style your palette in CSS
   @Input() public divClassName: string;
 
+  @Input() public skipsPaletteUpdate: boolean = false;
+
   // model changed listener function for palette
-  @Input() public modelChangedListener: (e: go.ChangedEvent) => void | null = null;
+  public modelChangedListener: (e: go.ChangedEvent) => void | null = null;
 
   // event emitter -- fires when palette model changes. Capture this emitted event in parent component
   @Output() public modelChange: EventEmitter<go.IncrementalData> = new EventEmitter<go.IncrementalData>();
@@ -35,29 +38,17 @@ export class PaletteComponent {
   // The Palette itself
   public palette: go.Palette | null = null;
 
-  // Differs for array Inputs (link / node data arrays)
-  public _ndaDiffer: any;
-  public _ldaDiffer: any;
+  // differs for array inputs (node / link data arrays)
+  private _ndaDiffer: KeyValueDiffer<string, any>;
+  private _ldaDiffer: KeyValueDiffer<string, any>;
 
-  // differ for modelData object
-  private _mdDiffer: KeyValueDiffer<string, any>;
-
-  constructor(private _differs: IterableDiffers, private _kvdiffers: KeyValueDiffers, public zone: NgZone) {
+  constructor(private _kvdiffers: KeyValueDiffers, public zone: NgZone) {
     // differs used to check if there have been changed to the array @Inputs
     // without them, changes to the input arrays won't register in ngOnChanges,
     // since the array reference itself may be the same
-    this._ndaDiffer = this._differs.find([]).create(null);
-    this._ldaDiffer = this._differs.find([]).create(null);
-
-    // also watch if model data changes; this differ must be initialized in ngOnInit
+    this._ndaDiffer = this._kvdiffers.find([]).create();
+    this._ldaDiffer = this._kvdiffers.find([]).create();
   } // end constructor
-
-  public ngOnInit() {
-    // initialize the differ that listens for changes to modelData object
-    if (this.modelData) {
-      this._mdDiffer = this._kvdiffers.find(this.modelData).create();
-    }
-  } // end ngOnInit
 
   /**
    * Initialize Palette after view init
@@ -104,7 +95,7 @@ export class PaletteComponent {
 
     // initializer listener
     this.modelChangedListener = (e: go.ChangedEvent) => {
-      if (e.isTransactionFinished) {
+      if (e.isTransactionFinished && e.diagram && e.diagram.model && !e.diagram.model.isReadOnly) {
         // this must be done within a NgZone.run block, so changes are detected in the parent component
         this.zone.run(() => {
           const dataChanges = e.model!.toIncrementalData(e);
@@ -119,36 +110,32 @@ export class PaletteComponent {
    * Always be checking if array Input data has changed (node and link data arrays)
    */
   public ngDoCheck() {
-    const nodeDataArrayChanges = this._ndaDiffer.diff(this.nodeDataArray);
-    const linkDataArrayChanges = this._ldaDiffer.diff(this.linkDataArray);
-    let modelDataChanges = null;
-    if (this._mdDiffer) {
-      modelDataChanges = this._mdDiffer.diff(this.modelData);
-    }
-    if (nodeDataArrayChanges || linkDataArrayChanges || modelDataChanges) {
-      this.updateFromAppData();
-    }
-  } // end ngDoCheck
 
-  /**
-   * Some input property has changed (or its contents changed) in parent component.
-   * Update palette data accordingly
-   */
-  public updateFromAppData() {
     if (!this.palette) return;
-    const model = this.palette.model;
+    if (!this.palette.model) return;
 
-    model.startTransaction('update data');
-    model.mergeNodeDataArray(model.cloneDeep(this.nodeDataArray));
-    if (this.linkDataArray && model instanceof go.GraphLinksModel) {
-      model.mergeLinkDataArray(model.cloneDeep(this.linkDataArray));
-    }
-    if (this.modelData) {
-      model.assignAllDataProperties(model.modelData, this.modelData);
-    }
-    model.commitTransaction('update data');
+    // these need to be run each check, even if no merging happens
+    // otherwise, they will detect all diffs that happened since last time skipsPaletteUpdate was false,
+    // such as remove ops that happened in GoJS when skipsPaletteUpdate = true, 
+    // and then realllllly bad stuff happens (deleting random nodes, updating the wrong Parts)
+    // Angular differs are a lot of fun
+    var nodeDiffs = this._ndaDiffer.diff(this.nodeDataArray);
+    var linkDiffs = this._ldaDiffer.diff(this.linkDataArray);
 
-  }
+    if (this.skipsPaletteUpdate) return;
+
+    // don't need model change listener while performing known data updates
+    if (this.modelChangedListener !== null) this.palette.model.removeChangedListener(this.modelChangedListener);
+
+    this.palette.model.startTransaction('update data');
+    DiagramComponent.mergeChanges(this, nodeDiffs, "n");
+    DiagramComponent.mergeChanges(this, linkDiffs, "l");
+    this.palette.model.assignAllDataProperties(this.palette.model.modelData, this.modelData);
+    this.palette.model.commitTransaction('update data');
+    // reset the model change listener
+    if (this.modelChangedListener !== null) this.palette.model.addChangedListener(this.modelChangedListener);
+
+  } // end ngDoCheck
 
   public ngOnDestroy() {
     this.palette.div = null; // removes event listeners

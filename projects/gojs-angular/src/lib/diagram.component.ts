@@ -1,6 +1,5 @@
-import { Component, ElementRef, EventEmitter, Input, IterableDiffers, IterableDiffer, KeyValueDiffer, KeyValueDiffers, NgZone, Output, ViewChild, KeyValueChangeRecord } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, KeyValueDiffer, KeyValueDiffers, NgZone, Output, ViewChild, KeyValueChangeRecord } from '@angular/core';
 import * as go from 'gojs';
-import { dashCaseToCamelCase } from '@angular/compiler/src/util';
 
 @Component({
   selector: 'gojs-diagram',
@@ -27,10 +26,9 @@ export class DiagramComponent {
   @Input() public divClassName: string;
 
   // model changed listener function for diagram
-  @Input() public modelChangedListener: (e: go.ChangedEvent) => void | null = null;
+  public modelChangedListener: (e: go.ChangedEvent) => void | null = null;
 
-  @Input()
-  public skipsDiagramUpdate: boolean = false;
+  @Input() public skipsDiagramUpdate: boolean = false;
 
   // event emitter -- fires when diagram model changes. Capture this emitted event in parent component
   @Output() public modelChange: EventEmitter<go.IncrementalData> = new EventEmitter<go.IncrementalData>();
@@ -41,26 +39,14 @@ export class DiagramComponent {
   // differs for array inputs (node / link data arrays)
   private _ndaDiffer: KeyValueDiffer<string, any>;
   private _ldaDiffer: KeyValueDiffer<string, any>;
-  // differ for modelData object
-  private _mdDiffer: KeyValueDiffer<string, any>;
 
-
-  constructor(private _differs: IterableDiffers, private _kvdiffers: KeyValueDiffers, public zone: NgZone) {
+  constructor(private _kvdiffers: KeyValueDiffers, public zone: NgZone) {
     // differs used to check if there have been changed to the array @Inputs
     // without them, changes to the input arrays won't register in ngOnChanges,
     // since the array reference itself may be the same
     this._ndaDiffer = this._kvdiffers.find([]).create();
     this._ldaDiffer = this._kvdiffers.find([]).create();
-
-    // also watch if model data changes; this differ must be initialized in ngOnInit
   }
-
-  public ngOnInit() {
-    // initialize the differ that listens for changes to modelData object
-    if (this.modelData) {
-      this._mdDiffer = this._kvdiffers.find(this.modelData).create();
-    }
-  } // end ngOnInit
 
   /**
    * Initializes diagram / model after view init
@@ -105,7 +91,7 @@ export class DiagramComponent {
 
     // initializer listener
     this.modelChangedListener = (e: go.ChangedEvent) => {
-      if (e.isTransactionFinished) {
+      if (e.isTransactionFinished && e.diagram && e.diagram.model && !e.diagram.model.isReadOnly) {
         // this must be done within a NgZone.run block, so changes are detected in the parent component
         this.zone.run(() => {
           const dataChanges = e.model!.toIncrementalData(e);
@@ -117,25 +103,14 @@ export class DiagramComponent {
 
   } // end ngAfterViewInit
 
-
-
   /**
-   * Always be checking if array Input data has changed (node and link data arrays)
-   */
-  public ngDoCheck() {
-
-    if (!this.diagram) return;
-    if (!this.diagram.model) return;
-
-    // these need to be run each check, even if no merging happens
-    // otherwise, they will detect all diffs that happened since last time skipsDiagram was false,
-    // such as remove ops that happened in GoJS when skipsDiagram = true, 
-    // and then realllllly bad stuff happens (deleting random nodes, updating the wrong Parts)
-    // Angular differs are a lot of fun
-    var nodeDiffs = this._ndaDiffer.diff(this.nodeDataArray);
-    var linkDiffs = this._ldaDiffer.diff(this.linkDataArray);
-
-    if (this.skipsDiagramUpdate) return;
+   * Merges changes from app data into GoJS model data, 
+   * making sure only actual changes (and not falsely flagged no-ops on array / obj data props) are logged
+   * @param component an instance of DiagramComponent or PaletteComponent
+   * @param kvchanges The kvchanges object produced by either a node or link Angular differ object
+   * @param str "n" for node data changes, "l" for link data changes
+   *  */ 
+  public static mergeChanges(component, kvchanges, str): boolean {
 
     // helper function
     function compareObjs(obj1, obj2) {
@@ -162,94 +137,110 @@ export class DiagramComponent {
       return true;
     }
 
-    var dc = this;
-    // merges changes from app data into GoJS model data, 
-    // making sure only actual changes (and not falsely flagged no-ops on array / obj data props) are logged
-    function mergeChanges(kvchanges, str): boolean {
-      if (!dc.diagram || !dc.diagram.model) return;
+    var dia = component instanceof DiagramComponent ? dia : component.palette;
 
-      if (kvchanges) {
+    if (!dia || !dia.model) return;
 
-        // handle added nodes / links
-        kvchanges.forEachAddedItem((r: KeyValueChangeRecord<string, any>) => {
-          switch (str) {
-            case "n": {
-              dc.diagram.model.addNodeData(r.currentValue);
-              break;
-            }
-            case "l": {
-              var m = <go.GraphLinksModel>dc.diagram.model;
-              m.addLinkData(r.currentValue);
-              break;
-            }
+    if (kvchanges) {
+
+      // handle added nodes / links
+      kvchanges.forEachAddedItem((r: KeyValueChangeRecord<string, any>) => {
+        switch (str) {
+          case "n": {
+            dia.model.addNodeData(r.currentValue);
+            break;
           }
-        });
+          case "l": {
+            var m = <go.GraphLinksModel>dia.model;
+            m.addLinkData(r.currentValue);
+            break;
+          }
+        }
+      });
 
-        // handle removed nodes / links
-        kvchanges.forEachRemovedItem((r: KeyValueChangeRecord<string, any>) => {
+      // handle removed nodes / links
+      kvchanges.forEachRemovedItem((r: KeyValueChangeRecord<string, any>) => {
+        switch (str) {
+          case "n": {
+            let m = dia.model;
+            let keyPropName = m.nodeKeyProperty.toString();
+            var node = dia.findNodeForKey(r.previousValue[keyPropName]);
+            if (node) {
+              dia.remove(node);
+            }
+            break;
+          }
+          case "l": {
+            let m = <go.GraphLinksModel>dia.model;
+            var keyPropName = m.linkKeyProperty.toString();
+            var link = dia.findLinkForKey(r.previousValue[keyPropName]);
+            if (link) {
+              dia.remove(link);
+            }
+            break;
+          }
+        }
+      });
+
+      // handle changed data for nodes / links
+      kvchanges.forEachChangedItem((r: KeyValueChangeRecord<string, any>) => {
+        
+        // ensure "changes" to array / object / enumerable data properties are legit
+        const sameVals = compareObjs(r.currentValue, r.previousValue);
+
+        // update proper data object for node or link
+        if (!sameVals) {
           switch (str) {
             case "n": {
-              let m = dc.diagram.model;
-              var keyPropName = m.nodeKeyProperty.toString();
-              var node = dc.diagram.findNodeForKey(r.previousValue[keyPropName]);
+              let m = dia.model;
+              let keyPropName = m.nodeKeyProperty.toString();
+              var node = dia.findNodeForKey(r.previousValue[keyPropName]);
               if (node) {
-                dc.diagram.remove(node);
+                dia.model.assignAllDataProperties(node.data, r.currentValue);
               }
               break;
             }
             case "l": {
-              let m = <go.GraphLinksModel>dc.diagram.model;
+              let m = <go.GraphLinksModel>dia.model;
               var keyPropName = m.linkKeyProperty.toString();
-              var link = dc.diagram.findLinkForKey(r.previousValue[keyPropName]);
+              var link = dia.findLinkForKey(r.previousValue[keyPropName]);
               if (link) {
-                dc.diagram.remove(link);
+                dia.model.assignAllDataProperties(link.data, r.currentValue);
               }
               break;
             }
           }
-        });
-
-        // handle changed data for nodes / links
-        kvchanges.forEachChangedItem((r: KeyValueChangeRecord<string, any>) => {
-          
-          // ensure "changes" to array / object / enumerable data properties are legit
-          const sameVals = compareObjs(r.currentValue, r.previousValue);
-
-          // update proper data object for node or link
-          if (!sameVals) {
-            switch (str) {
-              case "n": {
-                let m = dc.diagram.model;
-                var keyPropName = m.nodeKeyProperty.toString();
-                var node = dc.diagram.findNodeForKey(r.previousValue[keyPropName]);
-                if (node) {
-                  dc.diagram.model.assignAllDataProperties(node.data, r.currentValue);
-                }
-                break;
-              }
-              case "l": {
-                let m = <go.GraphLinksModel>dc.diagram.model;
-                var keyPropName = m.linkKeyProperty.toString();
-                var link = dc.diagram.findLinkForKey(r.previousValue[keyPropName]);
-                if (link) {
-                  dc.diagram.model.assignAllDataProperties(link.data, r.currentValue);
-                }
-                break;
-              }
-            }
-          }
-          
-        });
-      }
-      
+        }
+        
+      });
     }
+    
+  }
+
+  /**
+   * Always be checking if array Input data has changed (node and link data arrays)
+   */
+  public ngDoCheck() {
+
+    if (!this.diagram) return;
+    if (!this.diagram.model) return;
+
+    // these need to be run each check, even if no merging happens
+    // otherwise, they will detect all diffs that happened since last time skipsDiagram was false,
+    // such as remove ops that happened in GoJS when skipsDiagram = true, 
+    // and then realllllly bad stuff happens (deleting random nodes, updating the wrong Parts)
+    // Angular differs are a lot of fun
+    var nodeDiffs = this._ndaDiffer.diff(this.nodeDataArray);
+    var linkDiffs = this._ldaDiffer.diff(this.linkDataArray);
+
+    if (this.skipsDiagramUpdate) return;
 
     // don't need model change listener while performing known data updates
     if (this.modelChangedListener !== null) this.diagram.model.removeChangedListener(this.modelChangedListener);
 
     this.diagram.model.startTransaction('update data');
-    mergeChanges(nodeDiffs, "n");
-    mergeChanges(linkDiffs, "l");
+    DiagramComponent.mergeChanges(this, nodeDiffs, "n");
+    DiagramComponent.mergeChanges(this, linkDiffs, "l");
     this.diagram.model.assignAllDataProperties(this.diagram.model.modelData, this.modelData);
     this.diagram.model.commitTransaction('update data');
     // reset the model change listener

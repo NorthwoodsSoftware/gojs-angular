@@ -137,7 +137,10 @@ public diagramModelChange = function(changes: go.IncrementalData) {
 Notice the use of the three functions of the DataSyncService, which is included with this package to make syncing your app-level data with Diagram / Palette data simple.
 
 #### Optional - skipsDiagramUpdate (DiagramComponent only)
-Specifies whether the component should skip updating, often set when updating state from a GoJS model change.
+Specifies whether the Diagram component should skip updating, often set when updating state from a GoJS model change.
+
+#### Optional - skipsPaletteUpdate (DiagramComponent only)
+Specifies whether the Palette component should skip updating, often set when updating state from a GoJS model change.
 
 #### observedDiagram (OverviewComponent only)
 Specifies the go.Diagram which the Overview will observe.
