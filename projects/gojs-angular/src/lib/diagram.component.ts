@@ -137,7 +137,7 @@ export class DiagramComponent {
       return true;
     }
 
-    var dia = component instanceof DiagramComponent ? dia : component.palette;
+    var dia = component instanceof DiagramComponent ? component.diagram : component.palette;
 
     if (!dia || !dia.model) return;
 
