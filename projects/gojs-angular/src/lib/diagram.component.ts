@@ -91,7 +91,7 @@ export class DiagramComponent {
 
     // initializer listener
     this.modelChangedListener = (e: go.ChangedEvent) => {
-      if (e.isTransactionFinished && e.diagram && e.diagram.model && !e.diagram.model.isReadOnly) {
+      if (e.isTransactionFinished && this.diagram && this.diagram.model && !this.diagram.model.isReadOnly) {
         // this must be done within a NgZone.run block, so changes are detected in the parent component
         this.zone.run(() => {
           const dataChanges = e.model!.toIncrementalData(e);

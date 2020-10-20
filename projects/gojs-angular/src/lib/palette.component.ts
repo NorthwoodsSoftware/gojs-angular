@@ -95,7 +95,7 @@ export class PaletteComponent {
 
     // initializer listener
     this.modelChangedListener = (e: go.ChangedEvent) => {
-      if (e.isTransactionFinished && e.diagram && e.diagram.model && !e.diagram.model.isReadOnly) {
+      if (e.isTransactionFinished && this.palette && this.palette.model && !this.palette.model.isReadOnly) {
         // this must be done within a NgZone.run block, so changes are detected in the parent component
         this.zone.run(() => {
           const dataChanges = e.model!.toIncrementalData(e);
