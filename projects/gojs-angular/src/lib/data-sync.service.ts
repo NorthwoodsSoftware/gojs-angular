@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import * as go from 'gojs';
-import { GojsAngularModule } from './gojs-angular.module';
 
 @Injectable({
   providedIn: 'root'
@@ -20,11 +19,8 @@ export class DataSyncService {
     if (!changes.modifiedNodeData && !changes.insertedNodeKeys && !changes.removedNodeKeys) return nodeData;
 
     // get the property name that will return a unique value for the node
-    const nodeKeyProperty = model? model.nodeKeyProperty : 'key';
+    const nodeKeyProperty = model ? model.nodeKeyProperty : 'key';
 
-    if (nodeKeyProperty instanceof Function) {
-
-    }
     // maintain a map of modified nodes for fast lookup during insertion
     const modifiedNodesMap = new go.Map<go.Key, go.ObjectData>();
 
@@ -78,7 +74,7 @@ export class DataSyncService {
     if (!changes.modifiedLinkData && !changes.insertedLinkKeys && !changes.removedLinkKeys) return linkData;
 
     // get the property name that will return a unique value for the node
-    const linkKeyProperty = model? model.linkKeyProperty : 'key';
+    const linkKeyProperty = model ? model.linkKeyProperty : 'key';
 
     // maintain a map of modified nodes for fast lookup during insertion
     const modifiedLinksMap = new go.Map<go.Key, go.ObjectData>();
