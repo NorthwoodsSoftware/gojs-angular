@@ -12,14 +12,12 @@ export class DataSyncService {
    * Sync a node data array with a set of changes
    * @param changes The set of changes to the GoJS model
    * @param nodeData The node data array to merge these changes with
+   * @param model Required if you have defined your model.nodeKeyProperty to be something other than 'key'
    * @returns A node data array, merged with the changes
    */
   public static syncNodeData(changes: go.IncrementalData, nodeData: Array<go.ObjectData>, model?: go.Model) {
     if (!changes) return nodeData;
     if (!changes.modifiedNodeData && !changes.insertedNodeKeys && !changes.removedNodeKeys) return nodeData;
-
-    // get the property name that will return a unique value for the node
-    const nodeKeyProperty = model ? model.nodeKeyProperty : 'key';
 
     // maintain a map of modified nodes for fast lookup during insertion
     const modifiedNodesMap = new go.Map<go.Key, go.ObjectData>();
@@ -28,11 +26,11 @@ export class DataSyncService {
     if (changes.modifiedNodeData) {
       changes.modifiedNodeData.forEach((nd: go.ObjectData) => {
         // Get the value of the node key property checking wether is a function or a string
-        const key = (nodeKeyProperty instanceof Function) ? nodeKeyProperty(nd).toString() : nd[nodeKeyProperty];
+        const key = model ? model.getKeyForNodeData(nd) : nd['key'];
         modifiedNodesMap.set(key, nd);
         for (let i = 0; i < nodeData.length; i++) {
           const ndEntry = nodeData[i];
-          const keyNdEntry = (nodeKeyProperty instanceof Function) ? nodeKeyProperty(ndEntry).toString() : ndEntry[nodeKeyProperty];
+          const keyNdEntry = model ? model.getKeyForNodeData(ndEntry) : ndEntry['key'];
           if (keyNdEntry === key) {
             nodeData[i] = nd;
           }
@@ -53,7 +51,7 @@ export class DataSyncService {
     // account for removed node data
     if (changes.removedNodeKeys) {
       nodeData = nodeData.filter((nd: go.ObjectData) => {
-        const key = (nodeKeyProperty instanceof Function) ? nodeKeyProperty(nd).toString() : nd[nodeKeyProperty];
+        const key = model ? model.getKeyForNodeData(nd) : nd['key'];
         if (changes.removedNodeKeys.includes(key)) {
           return false;
         } return true;
@@ -67,14 +65,12 @@ export class DataSyncService {
    * Sync a link data array with a set of changes
    * @param changes The set of changes to the GoJS model
    * @param linkData The link data array to merge these changes with
+   * @param model Required if you have defined your model.linkKeyProperty to be something other than 'key'
    * @returns A link data array, merged with the changes
    */
   public static syncLinkData(changes: go.IncrementalData, linkData: Array<go.ObjectData>, model?: go.GraphLinksModel) {
     if (!changes) return linkData;
     if (!changes.modifiedLinkData && !changes.insertedLinkKeys && !changes.removedLinkKeys) return linkData;
-
-    // get the property name that will return a unique value for the node
-    const linkKeyProperty = model ? model.linkKeyProperty : 'key';
 
     // maintain a map of modified nodes for fast lookup during insertion
     const modifiedLinksMap = new go.Map<go.Key, go.ObjectData>();
@@ -82,14 +78,13 @@ export class DataSyncService {
     // account for modified link data
     if (changes.modifiedLinkData) {
       changes.modifiedLinkData.forEach((ld: go.ObjectData) => {
-        // Get the value of the node key property checking wether is a function or a string
-        const key = (linkKeyProperty instanceof Function) ? linkKeyProperty(ld).toString() : ld[linkKeyProperty];
-
+        // Get the value of the link key
+        const key = model ? model.getKeyForLinkData(ld) : ld['key'];
         modifiedLinksMap.set(key, ld);
 
         for (let i = 0; i < linkData.length; i++) {
           const ldEntry = linkData[i];
-          const keyLdEntry = (linkKeyProperty instanceof Function) ? linkKeyProperty(ldEntry).toString() : ldEntry[linkKeyProperty];
+          const keyLdEntry = model ? model.getKeyForLinkData(ldEntry) : ldEntry['key'];
           if (keyLdEntry === key) {
             linkData[i] = ld;
           }
@@ -110,7 +105,7 @@ export class DataSyncService {
     // account for removed link data
     if (changes.removedLinkKeys) {
       linkData = linkData.filter((ld: go.ObjectData) => {
-        const key = (linkKeyProperty instanceof Function) ? linkKeyProperty(ld).toString() : ld[linkKeyProperty];
+        const key = model ? model.getKeyForLinkData(ld) : ld['key'];
         if (changes.removedLinkKeys.includes(key)) {
           return false;
         } return true;

@@ -128,13 +128,13 @@ This function will typically be responsible for updating app-level state.
 ```js
 // When the diagram model changes, update app data to reflect those changes
 public diagramModelChange = function(changes: go.IncrementalData) {
-  this.diagramNodeData = DataSyncService.syncNodeData(changes, this.diagramNodeData);
-  this.diagramLinkData = DataSyncService.syncLinkData(changes, this.diagramLinkData);
+  this.diagramNodeData = DataSyncService.syncNodeData(changes, this.diagramNodeData, this.observedDiagram.model);
+  this.diagramLinkData = DataSyncService.syncLinkData(changes, this.diagramLinkData, this.observedDiagram.model);
   this.diagramModelData = DataSyncService.syncModelData(changes, this.diagramModelData);
 };
 ```
 
-Notice the use of the three functions of the DataSyncService, which is included with this package to make syncing your app-level data with Diagram / Palette data simple.
+Notice the use of the three functions of the DataSyncService, which is included with this package to make syncing your app-level data with Diagram / Palette data simple. Be aware: If you have set your Diagram's model.nodeKeyProperty or model.linkKeyProperty to anything other than 'key', you will need to pass your Diagram's model as a third parameter to DataSyncService.syncNodeData and DataSyncService.syncLinkData.
 
 #### Optional - skipsDiagramUpdate (DiagramComponent only)
 Specifies whether the Diagram component should skip updating, often set when updating state from a GoJS model change.
