@@ -86,6 +86,7 @@ export class DiagramComponent {
         if (this.modelData) {
           m.assignAllDataProperties(m.modelData, this.modelData);
         }
+        this.diagram.layoutDiagram(true);
       }, null);
     });
 
