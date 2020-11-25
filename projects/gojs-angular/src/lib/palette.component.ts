@@ -129,9 +129,10 @@ export class PaletteComponent {
     if (this.modelChangedListener !== null) this.palette.model.removeChangedListener(this.modelChangedListener);
 
     this.palette.model.startTransaction('update data');
+    // update modelData first, in case bindings on nodes / links depend on model data
+    this.palette.model.assignAllDataProperties(this.palette.model.modelData, this.modelData);
     DiagramComponent.mergeChanges(this, nodeDiffs, "n");
     DiagramComponent.mergeChanges(this, linkDiffs, "l");
-    this.palette.model.assignAllDataProperties(this.palette.model.modelData, this.modelData);
     this.palette.model.commitTransaction('update data');
     // reset the model change listener
     if (this.modelChangedListener !== null) this.palette.model.addChangedListener(this.modelChangedListener);

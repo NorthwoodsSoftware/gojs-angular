@@ -240,10 +240,13 @@ export class DiagramComponent {
     if (this.modelChangedListener !== null) this.diagram.model.removeChangedListener(this.modelChangedListener);
 
     this.diagram.model.startTransaction('update data');
+    // update modelData first, in case bindings on nodes / links depend on model data
+    this.diagram.model.assignAllDataProperties(this.diagram.model.modelData, this.modelData);
+    // merge node / link data
     DiagramComponent.mergeChanges(this, nodeDiffs, "n");
     DiagramComponent.mergeChanges(this, linkDiffs, "l");
-    this.diagram.model.assignAllDataProperties(this.diagram.model.modelData, this.modelData);
     this.diagram.model.commitTransaction('update data');
+
     // reset the model change listener
     if (this.modelChangedListener !== null) this.diagram.model.addChangedListener(this.modelChangedListener);
 
