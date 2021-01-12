@@ -42,12 +42,17 @@ export class PaletteComponent {
   private _ndaDiffer: KeyValueDiffer<string, any>;
   private _ldaDiffer: KeyValueDiffer<string, any>;
 
+  private _mdaDiffer: KeyValueDiffer<string, any>;
+
   constructor(private _kvdiffers: KeyValueDiffers, public zone: NgZone) {
     // differs used to check if there have been changed to the array @Inputs
     // without them, changes to the input arrays won't register in ngOnChanges,
     // since the array reference itself may be the same
     this._ndaDiffer = this._kvdiffers.find([]).create();
     this._ldaDiffer = this._kvdiffers.find([]).create();
+
+    this._mdaDiffer = this._kvdiffers.find([]).create();
+
   } // end constructor
 
   /**
@@ -122,6 +127,10 @@ export class PaletteComponent {
     // Angular differs are a lot of fun
     var nodeDiffs = this._ndaDiffer.diff(this.nodeDataArray);
     var linkDiffs = this._ldaDiffer.diff(this.linkDataArray);
+
+    var modelDiffs = this._mdaDiffer.diff(this.modelData);
+
+    if (!nodeDiffs && !linkDiffs && !modelDiffs) return;
 
     if (this.skipsPaletteUpdate) return;
 
