@@ -1,4 +1,5 @@
 import { NgModule } from '@angular/core';
+import { DataSyncService } from './data-sync.service';
 import { DiagramComponent } from './diagram.component';
 import { OverviewComponent } from './overview.component';
 import { PaletteComponent } from './palette.component';
@@ -10,6 +11,9 @@ import { PaletteComponent } from './palette.component';
     PaletteComponent
   ],
   imports: [
+  ],
+  providers: [
+    DataSyncService
   ],
   exports: [
     DiagramComponent,

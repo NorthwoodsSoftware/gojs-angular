@@ -1,9 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as go from 'gojs';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class DataSyncService {
 
   constructor() { }
