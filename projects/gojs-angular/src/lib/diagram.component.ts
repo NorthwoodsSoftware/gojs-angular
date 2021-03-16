@@ -120,6 +120,9 @@ export class DiagramComponent {
 
     // helper function
     function compareObjs(obj1, obj2) {
+
+      if (!obj1 || !obj2) return false;
+
       // Loop through properties in object 1
       for (const p in obj1) {
         // Check property exists on both objects
@@ -202,7 +205,13 @@ export class DiagramComponent {
               let keyPropName = m.nodeKeyProperty.toString();
               var node = dia.findNodeForKey(r.previousValue[keyPropName]);
               if (node) {
-                dia.model.assignAllDataProperties(node.data, r.currentValue);
+                // if the entry was replaced with null or undefined, just remove the entry altogther
+                // this is still pretty bad practice -- instead, users should remove entries in their node / link / model data, not set them to null
+                if (!r.currentValue) {
+                  dia.remove(node);
+                } else {
+                  dia.model.assignAllDataProperties(node.data, r.currentValue);
+                }
               }
               break;
             }
@@ -211,7 +220,13 @@ export class DiagramComponent {
               var keyPropName = m.linkKeyProperty.toString();
               var link = dia.findLinkForKey(r.previousValue[keyPropName]);
               if (link) {
-                dia.model.assignAllDataProperties(link.data, r.currentValue);
+                // if the entry was replaced with null or undefined, just remove the entry altogther
+                // this is still pretty bad practice -- instead, users should remove entries in their node / link / model data, not set them to null
+                if (!r.currentValue) {
+                  dia.remove(link);
+                } else {
+                  dia.model.assignAllDataProperties(link.data, r.currentValue);
+                }
               }
               break;
             }
