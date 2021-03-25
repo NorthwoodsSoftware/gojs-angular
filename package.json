@@ -26,7 +26,8 @@
     "gojs": "^2.1.32",
     "rxjs": "^6.5.4",
     "tslib": "^2.0.0",
-    "zone.js": "~0.10.2"
+    "zone.js": "~0.10.2",
+    "immer": "8.0.2"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^0.1100.2",

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import * as go from 'gojs';
+import produce from "immer";
 
 @Injectable()
 export class DataSyncService {
@@ -20,43 +21,47 @@ export class DataSyncService {
     // maintain a map of modified nodes for fast lookup during insertion
     const modifiedNodesMap = new go.Map<go.Key, go.ObjectData>();
 
-    // account for modified node data
-    if (changes.modifiedNodeData) {
-      changes.modifiedNodeData.forEach((nd: go.ObjectData) => {
-        // Get the value of the node key property checking wether is a function or a string
-        const key = model ? model.getKeyForNodeData(nd) : nd['key'];
-        modifiedNodesMap.set(key, nd);
-        for (let i = 0; i < nodeData.length; i++) {
-          const ndEntry = nodeData[i];
-          const keyNdEntry = model ? model.getKeyForNodeData(ndEntry) : ndEntry['key'];
-          if (keyNdEntry === key) {
-            nodeData[i] = nd;
+    // nodeData is immutable, modify it using the immer package's "produce" function (creates new array)
+    var newNodeDataArray = produce(nodeData, (draft) => {
+      // account for modified node data
+      if (changes.modifiedNodeData) {
+        changes.modifiedNodeData.forEach((nd: go.ObjectData) => {
+          // Get the value of the node key property checking wether is a function or a string
+          const key = model ? model.getKeyForNodeData(nd) : nd['key'];
+          modifiedNodesMap.set(key, nd);
+          for (let i = 0; i < nodeData.length; i++) {
+            const ndEntry = nodeData[i];
+            const keyNdEntry = model ? model.getKeyForNodeData(ndEntry) : ndEntry['key'];
+            if (keyNdEntry === key) {
+              draft[i] = nd;
+            }
           }
-        }
-      });
-    }
+        });
+      }
 
-    // account for inserted node data
-    if (changes.insertedNodeKeys) {
-      changes.insertedNodeKeys.forEach((key: go.Key) => {
-        const nd = modifiedNodesMap.get(key);
-        if (nd) {
-          nodeData.push(nd);
-        }
-      });
-    }
+      // account for inserted node data
+      if (changes.insertedNodeKeys) {
+        changes.insertedNodeKeys.forEach((key: go.Key) => {
+          const nd = modifiedNodesMap.get(key);
+          if (nd) {
+            draft.push(nd);
+          }
+        });
+      }
 
-    // account for removed node data
-    if (changes.removedNodeKeys) {
-      nodeData = nodeData.filter((nd: go.ObjectData) => {
-        const key = model ? model.getKeyForNodeData(nd) : nd['key'];
-        if (changes.removedNodeKeys.includes(key)) {
-          return false;
-        } return true;
-      });
-    }
+      // account for removed node data
+      if (changes.removedNodeKeys) {
+        return draft.filter((nd: go.ObjectData) => {
+          const key = model ? model.getKeyForNodeData(nd) : nd['key'];
+          if (changes.removedNodeKeys.includes(key)) {
+            return false;
+          } 
+          return true;
+        });
+      }
+    });
 
-    return nodeData;
+    return newNodeDataArray;
   }
 
   /**
@@ -73,42 +78,45 @@ export class DataSyncService {
     // maintain a map of modified nodes for fast lookup during insertion
     const modifiedLinksMap = new go.Map<go.Key, go.ObjectData>();
 
-    // account for modified link data
-    if (changes.modifiedLinkData) {
-      changes.modifiedLinkData.forEach((ld: go.ObjectData) => {
-        // Get the value of the link key
-        const key = model ? model.getKeyForLinkData(ld) : ld['key'];
-        modifiedLinksMap.set(key, ld);
+    // linkData is immutable, modify it using the immer package's "produce" function (creates new array)
+    linkData = produce(linkData, draft => {
+      // account for modified link data
+      if (changes.modifiedLinkData) {
+        changes.modifiedLinkData.forEach((ld: go.ObjectData) => {
+          // Get the value of the link key
+          const key = model ? model.getKeyForLinkData(ld) : ld['key'];
+          modifiedLinksMap.set(key, ld);
 
-        for (let i = 0; i < linkData.length; i++) {
-          const ldEntry = linkData[i];
-          const keyLdEntry = model ? model.getKeyForLinkData(ldEntry) : ldEntry['key'];
-          if (keyLdEntry === key) {
-            linkData[i] = ld;
+          for (let i = 0; i < linkData.length; i++) {
+            const ldEntry = linkData[i];
+            const keyLdEntry = model ? model.getKeyForLinkData(ldEntry) : ldEntry['key'];
+            if (keyLdEntry === key) {
+              draft[i] = ld;
+            }
           }
-        }
-      });
-    }
+        });
+      }
 
-    // account for inserted link data
-    if (changes.insertedLinkKeys) {
-      changes.insertedLinkKeys.forEach((key: go.Key) => {
-        const nd = modifiedLinksMap.get(key);
-        if (nd) {
-          linkData.push(nd);
-        }
-      });
-    }
+      // account for inserted link data
+      if (changes.insertedLinkKeys) {
+        changes.insertedLinkKeys.forEach((key: go.Key) => {
+          const nd = modifiedLinksMap.get(key);
+          if (nd) {
+            draft.push(nd);
+          }
+        });
+      }
 
-    // account for removed link data
-    if (changes.removedLinkKeys) {
-      linkData = linkData.filter((ld: go.ObjectData) => {
-        const key = model ? model.getKeyForLinkData(ld) : ld['key'];
-        if (changes.removedLinkKeys.includes(key)) {
-          return false;
-        } return true;
-      });
-    }
+      // account for removed link data
+      if (changes.removedLinkKeys) {
+        return draft.filter((ld: go.ObjectData) => {
+          const key = model ? model.getKeyForLinkData(ld) : ld['key'];
+          if (changes.removedLinkKeys.includes(key)) {
+            return false;
+          } return true;
+        });
+      }
+    });
 
     return linkData;
   }

@@ -23,6 +23,9 @@
       "gojs-angular": [
         "dist/gojs-angular"
       ],
+      "gojs": [
+        "dist/go-dev"
+      ],
       "gojs-angular/*": [
         "dist/gojs-angular/*"
       ]

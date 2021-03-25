@@ -1,5 +1,6 @@
 import { Component, ElementRef, Input, NgZone, SimpleChanges, ViewChild } from '@angular/core';
 import * as go from 'gojs';
+import { NgDiagramHelper } from "./ng-diagram-helper";
 
 @Component({
   selector: 'gojs-overview',
@@ -9,10 +10,8 @@ export class OverviewComponent {
 
   // The function used to initialize the Overview
   @Input() public initOverview: () => go.Overview;
-
   // Overview div class name. Use this name to style your Overview in CSS
   @Input() public divClassName: string;
-
   // The Diagram to observe with the Overview
   @Input() public observedDiagram: go.Diagram = null;
 
@@ -35,20 +34,8 @@ export class OverviewComponent {
       this.overview.contentAlignment = go.Spot.Center;
     }
 
-    // This bit of code makes sure the mousemove event listeners on the canvas are run outside NgZone
-    // This makes it so change detection isn't triggered every time the mouse is moved inside the canvas, greatly improving performance
-    // If some state-altering behavior must happen on a mousemove event inside the overview,
-    // you will have to using zone.run() to make sure that event triggers angular change detection
-    this.overview.addEventListener = (DOMElement: Element | Window | Document, name: string, listener: any, capture: boolean) => {
-      const superAddEventListener = go.Diagram.prototype.addEventListener;
-      if (name === 'mousemove') {
-        this.zone.runOutsideAngular(() => superAddEventListener.call(this, DOMElement, name, listener, capture));
-      } else {
-        this.zone.run(() => {
-          superAddEventListener.call(this, DOMElement, name, listener, capture);
-        });
-      }
-    };
+    // recuces hange detection on mouse moves, boosting performance
+    NgDiagramHelper.makeMouseMoveRunOutsideAngularZone(this.overview, this.zone);
 
     this.overview.div = this.overviewDiv.nativeElement;
   }
