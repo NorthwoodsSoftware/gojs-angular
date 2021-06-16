@@ -5,8 +5,6 @@ import produce from "immer";
 @Injectable()
 export class DataSyncService {
 
-  constructor() { }
-
   /**
    * Sync a node data array with a set of changes
    * @param changes The set of changes to the GoJS model
