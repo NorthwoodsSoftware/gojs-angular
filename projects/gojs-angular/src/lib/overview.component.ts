@@ -8,16 +8,16 @@ import { NgDiagramHelper } from "./ng-diagram-helper";
 })
 export class OverviewComponent {
 
-  // The function used to initialize the Overview
+  /** The function used to initialize and return the Overview */ 
   @Input() public initOverview: () => go.Overview;
-  // Overview div class name. Use this name to style your Overview in CSS
+  /** The div class name that holds the Overview. Use this name to style your Overview in CSS. */
   @Input() public divClassName: string;
-  // The Diagram to observe with the Overview
+  /** The Diagram to observe with the Overview */
   @Input() public observedDiagram: go.Diagram = null;
 
   @ViewChild('ngOverview', { static: true }) public overviewDiv: ElementRef;
 
-  // The Overview itself
+  /** The Overview itself  */
   public overview: go.Overview | null = null;
 
   constructor(public zone: NgZone) { }
@@ -26,15 +26,20 @@ export class OverviewComponent {
    * Initialize the overview
    */
   public ngAfterViewInit() {
-    if (!this.overviewDiv) return;
+    if (!this.overviewDiv) {
+      throw new Error("overviewDiv is not defined");
+    }
     if (this.initOverview) {
       this.overview = this.initOverview();
+      if (!(this.overview instanceof go.Overview)) {
+        throw new Error("initOverview function did not return a go.Overview");
+      }
     } else {
       this.overview = new go.Overview();
       this.overview.contentAlignment = go.Spot.Center;
     }
 
-    // recuces hange detection on mouse moves, boosting performance
+    // reduces change detection on mouse moves, boosting performance
     NgDiagramHelper.makeMouseMoveRunOutsideAngularZone(this.overview, this.zone);
 
     this.overview.div = this.overviewDiv.nativeElement;

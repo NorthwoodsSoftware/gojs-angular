@@ -1,14 +1,16 @@
 import { NgZone } from "@angular/core";
 import { EventEmitter } from "events";
 import * as go from "gojs";
+import { DiagramComponent } from "./diagram.component";
 
-// an interface to allow methods defined below to accept Palette or Diagram Components, 
-// without requiring DiagramComponent or PaletteComponent directly in this file
-// (that would create a circular dependency)
+/**
+ * An interface to allow methods defined below to accept Palette or Diagram Components, 
+ * without requiring DiagramComponent or PaletteComponent directly in this file
+ * (that would create a circular dependency)
+ */ 
 export interface IDiagramOrPaletteComponent {
-  modelChange: EventEmitter<any>,
+  modelChange: EventEmitter<go.IncrementalData>,
   zone: NgZone,
-  modelChangedListener: (e: go.ChangedEvent) => void | null,
   nodeDataArray: Array<go.ObjectData>,
   linkDataArray: Array<go.ObjectData>,
   modelData: go.ObjectData
@@ -48,7 +50,7 @@ export class NgDiagramHelper{
    * @param linkDataArray 
    * @param modelData 
    */
-  public static initializeModel(diagram: go.Diagram, nodeDataArray: Array<go.ObjectData>, linkDataArray: Array<go.ObjectData>, modelData: go.ObjectData) {
+  public static initializeModel(diagram: go.Diagram | go.Palette, nodeDataArray: Array<go.ObjectData>, linkDataArray: Array<go.ObjectData>, modelData: go.ObjectData) {
     diagram.delayInitialization(() => {
       const model = diagram.model;
       model.commit((m: go.Model) => {
@@ -59,7 +61,6 @@ export class NgDiagramHelper{
         if (modelData) {
           m.assignAllDataProperties(m.modelData, modelData);
         }
-        diagram.layoutDiagram(true);
       }, null);
     });
   }
@@ -69,7 +70,7 @@ export class NgDiagramHelper{
    * Those changes will be emitted through a the component's modelChange EventEmitter.
    * @param component
    */
-  public static initializeModelChangedListener(component: IDiagramOrPaletteComponent) {
+  public static initializeModelChangedListener(component: DiagramComponent) {
     var diagram = null;
     if (!(component.hasOwnProperty("diagram")) && !(component.hasOwnProperty("palette"))) return;
     if (component.hasOwnProperty("diagram")) diagram = component["diagram"];
@@ -95,7 +96,8 @@ export class NgDiagramHelper{
     if (component.hasOwnProperty("diagram")) diagram = component["diagram"];
     if (component.hasOwnProperty("palette")) diagram = component["palette"]; 
     // don't need model change listener while performing known data updates
-    if (component.modelChangedListener !== null) diagram.model.removeChangedListener(component.modelChangedListener);
+    const mcl = component instanceof DiagramComponent ? component.modelChangedListener : null;
+    if (mcl !== null) diagram.model.removeChangedListener(mcl);
 
     diagram.model.startTransaction('update data');
     // update modelData first, in case bindings on nodes / links depend on model data
@@ -108,7 +110,7 @@ export class NgDiagramHelper{
     diagram.model.commitTransaction('update data');
 
     // reset the model change listener
-    if (component.modelChangedListener !== null) diagram.model.addChangedListener(component.modelChangedListener);
+    if (mcl !== null) diagram.model.addChangedListener(mcl);
   }
 
 }

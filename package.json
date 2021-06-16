@@ -1,6 +1,6 @@
 {
-  "name": "angular-tutorial",
-  "version": "0.0.0",
+  "name": "gojs-angular-test",
+  "version": "2.0.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -27,7 +27,7 @@
     "rxjs": "^6.5.4",
     "tslib": "^2.0.0",
     "zone.js": "~0.10.2",
-    "immer": "8.0.2"
+    "immer": "9.0.1"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^0.1100.2",

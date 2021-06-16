@@ -3,5 +3,9 @@
   "dest": "../../dist/gojs-angular",
   "lib": {
     "entryFile": "src/public-api.ts"
-  }
+  },
+  "whitelistedNonPeerDependencies": [
+    "tslib",
+    "immer"
+  ]
 }
