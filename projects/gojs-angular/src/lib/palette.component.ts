@@ -94,7 +94,6 @@ export class PaletteComponent {
         if (this.modelData) {
           m.assignAllDataProperties(m.modelData, this.modelData);
         }
-        this.palette.layoutDiagram(true);
       }, null);
     });
 
