@@ -170,6 +170,55 @@ Notice the use of the three static functions of the `DataSyncService` (`syncNode
 #### observedDiagram (OverviewComponent only)
 Specifies the [Diagram](https://gojs.net/latest/api/symbols/Diagram.html) which the Overview will observe.
 
+## Migrating to Version 2.0
+This page assumes use of `gojs-angular` version 2.0, which requires immutable state, unlike version 1.0. It is recommended to use the 2.0 version. If you have a `gojs-angular` project using version 1.x and want to upgrade, reference this section for tips on migrating to version 2.
+
+#### Should I upgrade?
+In general, yes.
+
+If you have very simple node and link data, using the latest 1.x version might be okay. But new features and quality of life changes will be published on the 2.x branch moving forward.
+
+Version 2.0 handles complex nested data much better than the previous version, due to its focus on immutable data. Additionally, it is a bit smaller in file size.
+
+One may wish to hold off on upgrading if they have lots of operations mutating their `@Input` properties, and they do not want to take the time to rewrite those operations immutably. However, the guide below details one way one could do this. Our [gojs-angular-basic](https://github.com/NorthwoodsSoftware/gojs-angular-basic) sample also has demonstrations of immutably updating `@Input` properties to make such a rewrite easier.
+
+#### Upgrade gojs-angular Version
+Update your package.json to require `gojs-angular` version 2.0 or greater, then run `npm install`.
+
+It is also recommended to upgrade to the lastest version of gojs.
+
+#### Immutability
+The biggest change with 2.0 is you must enforce immutability of `@Input` properties to your Diagram and Palette components.
+
+So, for instance, whenever an entry of `diagramNodeData` is updated, removed, or changed, you will need to generate a whole new Array for `DiagramComponent.diagramNodeData`. This can be done in many different ways with many different packages. A popular choice is [immer](https://github.com/immerjs/immer), which exposes a `produce` function that allows one to immutability manipulate their data on a `draft` variable. We will use that function here for demonstration purposes.
+###### The Version 1.0 Way
+In `gojs-angular` version 1, if you wanted to add some node data to your `diagramNodeData` `@Input` property, you could do so by simply adding to the `diagramNodeData` Array, mutating it. Such as:
+```js
+// When the diagram model changes, update app data to reflect those changes
+public addNode = function(nodeData: go.ObjectData) {
+  this.skipsDiagramUpdate = false; // sync changes with GoJS model
+  this.diagramNodeData.push(nodeData);
+}
+```
+###### The Version 2.0 Way
+In `gojs-angular` version 2, that same `addNode` function must be changed so the `diagramNodeData` property is updated immutably (that is, replaced with an entirely new Array). Here is an example of doing that with immer's `produce` function.
+```js
+// When the diagram model changes, update app data to reflect those changes
+public addNode = function(nodeData: go.ObjectData) {
+  this.state = produce(this.state, draft => {
+    var nodedata = { id: "Zeta", text: "Zorro", color: "red" };
+    draft.skipsDiagramUpdate = false;
+    draft.diagramNodeData.push(nodedata);
+  });
+}
+```
+Notice we are also using a massive `state` object to hold `gojs-angular` component properties. This makes these kinds of immutable operations (especially if you are using immer, or a package like it) straightforward (see how we were able to update both `skipsDiagramUpdate` and `diagramNodeData` on the same draft variable). 
+
+To see more samples of enforcing immutability with `gojs-angular`, see [gojs-angular-basic](https://github.com/NorthwoodsSoftware/gojs-angular-basic), particularly the modelChange property of the Diagram Component.
+
+#### Additional Considerations
+Additionally, as of 2.0, PaletteComponent no longer supports `skipsPaletteUpdate` or `modelChange` properties. As GoJS Palettes are read-only by default, their models should not be changing based on user input. Instead, if you need to update their node/link/model data, update their `@Input` properties (immutably, of course).
+
 ## License
 
 This project is intended to be used alongside [GoJS](https://gojs.net/latest/index.html),
