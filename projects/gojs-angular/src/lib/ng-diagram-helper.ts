@@ -76,11 +76,11 @@ export class NgDiagramHelper{
     if (component.hasOwnProperty("diagram")) diagram = component["diagram"];
     if (component.hasOwnProperty("palette")) diagram = component["palette"];    
     component.modelChangedListener = (e: go.ChangedEvent) => {
-      if (e.isTransactionFinished && diagram && diagram.model && !diagram.model.isReadOnly) {
+      if (e.isTransactionFinished && e.model && !e.model.isReadOnly && component.modelChange) {
         // this must be done within a NgZone.run block, so changes are detected in the parent component
         component.zone.run(() => {
           const dataChanges = e.model!.toIncrementalData(e);
-          component.modelChange.emit(dataChanges);
+          if (dataChanges !== null) component.modelChange.emit(dataChanges);
         });
       }
     };
