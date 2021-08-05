@@ -276,15 +276,15 @@ export class DiagramComponent {
     if (component.modelChangedListener !== null) this.diagram.model.removeChangedListener(this.modelChangedListener);
 
     component.diagram.model.startTransaction('update data');
-    if (isInit) component.diagram.model.modelData = {};
+   // if (isInit) component.diagram.model.modelData = {};
     // update modelData first, in case bindings on nodes / links depend on model data
     component.diagram.model.assignAllDataProperties(this.diagram.model.modelData, this.modelData);
     // merge node / link data
-    if (isInit) component.diagram.model.nodeDataArray = [];
+    // if (isInit) component.diagram.model.nodeDataArray = [];
     // DiagramComponent.mergeChanges(component, nodeDiffs, "n");
     this.diagram.model.mergeNodeDataArray(this.nodeDataArray);
     if (component.linkDataArray && component.diagram.model instanceof go.GraphLinksModel) {
-      if (isInit) component.diagram.model.linkDataArray = [];
+      // if (isInit) component.diagram.model.linkDataArray = [];
       component.diagram.model.mergeLinkDataArray(this.linkDataArray);
       // DiagramComponent.mergeChanges(component, linkDiffs, "l");
     }
@@ -300,6 +300,11 @@ export class DiagramComponent {
    public clearModel(): void {
     const diagram = this.diagram;
     if (diagram !== null) {
+      diagram.model.modelData = {};
+      diagram.model.nodeDataArray = [];
+      if (diagram.model instanceof go.GraphLinksModel) {
+        diagram.model.linkDataArray = [];
+      }
       this.wasCleared = true;
     }
   } // end clearModel function
