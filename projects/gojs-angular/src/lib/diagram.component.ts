@@ -263,8 +263,8 @@ export class DiagramComponent {
     if (this.wasCleared) {
       this.diagram.delayInitialization(() => {
         this.mergeAppDataWithModel(this, nodeDiffs, linkDiffs, true);
-      });
-      this.wasCleared = false;
+        this.wasCleared = false;
+      });  
     } else {
       this.mergeAppDataWithModel(this, nodeDiffs, linkDiffs, false);
     }
@@ -295,19 +295,17 @@ export class DiagramComponent {
   } // end mergeAppDataWithModel function
 
   /**
-   * Allows the next update to be treated as an initial load of the model.
+   * Clears the diagram of all nodes, links, and model data.
+   * Also clears the UndoManager history and clipboard.
+   * The next state update will be treated as diagram initialization.
    */
-   public clearModel(): void {
+   public clear(): void {
     const diagram = this.diagram;
     if (diagram !== null) {
-      diagram.model.modelData = {};
-      diagram.model.nodeDataArray = [];
-      if (diagram.model instanceof go.GraphLinksModel) {
-        diagram.model.linkDataArray = [];
-      }
+      diagram.clear();
       this.wasCleared = true;
     }
-  } // end clearModel function
+  } // end clear function
 
   public ngOnDestroy() {
     this.diagram.div = null; // removes event listeners
