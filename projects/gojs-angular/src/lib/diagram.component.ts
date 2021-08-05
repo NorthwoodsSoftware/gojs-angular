@@ -39,8 +39,10 @@ export class DiagramComponent {
   // differs for array inputs (node / link data arrays)
   private _ndaDiffer: KeyValueDiffer<string, any>;
   private _ldaDiffer: KeyValueDiffer<string, any>;
-
   private _mdaDiffer: KeyValueDiffer<string, any>;
+
+  /** An internal flag used to tell ngOnChanges to treat the next sync operation as a Diagram initialization */
+  private wasCleared: boolean = false;
 
   constructor(private _kvdiffers: KeyValueDiffers, public zone: NgZone) {
     // differs used to check if there have been changed to the array @Inputs
@@ -104,7 +106,6 @@ export class DiagramComponent {
       }
     };
     this.diagram.addModelChangedListener(this.modelChangedListener);
-
 
   } // end ngAfterViewInit
 
@@ -235,7 +236,7 @@ export class DiagramComponent {
       });
     }
     
-  }
+  } // end mergeChanges function
 
   /**
    * Always be checking if array Input data has changed (node and link data arrays)
@@ -259,23 +260,52 @@ export class DiagramComponent {
 
     if (this.skipsDiagramUpdate) return;
 
-    // don't need model change listener while performing known data updates
-    if (this.modelChangedListener !== null) this.diagram.model.removeChangedListener(this.modelChangedListener);
-
-    this.diagram.model.startTransaction('update data');
-    // update modelData first, in case bindings on nodes / links depend on model data
-    this.diagram.model.assignAllDataProperties(this.diagram.model.modelData, this.modelData);
-    // merge node / link data
-    DiagramComponent.mergeChanges(this, nodeDiffs, "n");
-    DiagramComponent.mergeChanges(this, linkDiffs, "l");
-    this.diagram.model.commitTransaction('update data');
-
-    // reset the model change listener
-    if (this.modelChangedListener !== null) this.diagram.model.addChangedListener(this.modelChangedListener);
+    if (this.wasCleared) {
+      this.diagram.delayInitialization(() => {
+        this.mergeAppDataWithModel(this, nodeDiffs, linkDiffs, true);
+      });
+      this.wasCleared = false;
+    } else {
+      this.mergeAppDataWithModel(this, nodeDiffs, linkDiffs, false);
+    }
 
   } // end ngDoCheck
 
+  private mergeAppDataWithModel(component: DiagramComponent, nodeDiffs, linkDiffs, isInit?: boolean) {
+    // don't need model change listener while performing known data updates
+    if (component.modelChangedListener !== null) this.diagram.model.removeChangedListener(this.modelChangedListener);
+
+    component.diagram.model.startTransaction('update data');
+    if (isInit) component.diagram.model.modelData = {};
+    // update modelData first, in case bindings on nodes / links depend on model data
+    component.diagram.model.assignAllDataProperties(this.diagram.model.modelData, this.modelData);
+    // merge node / link data
+    if (isInit) component.diagram.model.nodeDataArray = [];
+    // DiagramComponent.mergeChanges(component, nodeDiffs, "n");
+    this.diagram.model.mergeNodeDataArray(this.nodeDataArray);
+    if (component.linkDataArray && component.diagram.model instanceof go.GraphLinksModel) {
+      if (isInit) component.diagram.model.linkDataArray = [];
+      component.diagram.model.mergeLinkDataArray(this.linkDataArray);
+      // DiagramComponent.mergeChanges(component, linkDiffs, "l");
+    }
+    component.diagram.model.commitTransaction('update data');
+
+    // reset the model change listener
+    if (component.modelChangedListener !== null) component.diagram.model.addChangedListener(this.modelChangedListener);
+  } // end mergeAppDataWithModel function
+
+  /**
+   * Allows the next update to be treated as an initial load of the model.
+   */
+   public clearModel(): void {
+    const diagram = this.diagram;
+    if (diagram !== null) {
+      this.wasCleared = true;
+    }
+  } // end clearModel function
+
   public ngOnDestroy() {
     this.diagram.div = null; // removes event listeners
-  }
-}
+  } // end ngOnDestroy function
+
+} // end DiagramComponent class
