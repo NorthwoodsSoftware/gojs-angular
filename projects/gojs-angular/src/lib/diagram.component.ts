@@ -18,7 +18,7 @@ export class DiagramComponent {
   /**  Link data for diagram. Optional. */
   @Input() public linkDataArray: Array<go.ObjectData> = null;
   /** Model data for diagram. Optional. */
-  @Input() public modelData: go.ObjectData = null; 
+  @Input() public modelData: go.ObjectData = null;
   /** Diagram div class name. Use this name to style your diagram in CSS. */
   @Input() public divClassName: string;
   /** Model changed listener function for diagram */
@@ -31,6 +31,8 @@ export class DiagramComponent {
   @ViewChild('ngDiagram', { static: true }) public diagramDiv: ElementRef;
   /** The Diagram itself */
   public diagram: go.Diagram = null;
+  /** An internal flag used to tell ngOnChanges to treat the next sync operation as a Diagram initialization */
+  private wasCleared = false;
 
   constructor(public zone: NgZone) {  }
 
@@ -44,7 +46,7 @@ export class DiagramComponent {
     this.diagram = this.initDiagram();
     if (!(this.diagram instanceof go.Diagram)) {
       throw new Error("initDiagram function did not return a go.Diagram");
-    } 
+    }
 
     // reduces change detection on mouse moves, boosting performance
     NgDiagramHelper.makeMouseMoveRunOutsideAngularZone(this.diagram, this.zone);
@@ -62,15 +64,39 @@ export class DiagramComponent {
   } // end ngAfterViewInit
 
   /**
-   * If a change has occured on an @Input property, merge the app-level changes with GoJS
+   * If a change has occurred on an @Input property, merge the app-level changes with GoJS
    */
   public ngOnChanges() {
     if (!this.diagram || !this.diagram.model || this.skipsDiagramUpdate) return;
-    NgDiagramHelper.mergeAppDataWithModel(this);
+    // if clear was just called, treat this as initial
+    if (this.wasCleared) {
+      this.diagram.delayInitialization(() => {
+        NgDiagramHelper.mergeAppDataWithModel(this, true);
+      });
+      this.wasCleared = false;
+    } else {
+      NgDiagramHelper.mergeAppDataWithModel(this);
+    }
   } // end ngOnChanges
 
+  /**
+   * Clears the diagram of all nodes, links, and model data.
+   * Also clears the UndoManager history and clipboard.
+   * The next state update will be treated as diagram initialization.
+   */
+   public clear(): void {
+    const diagram = this.diagram;
+    if (diagram !== null) {
+      diagram.clear();
+      this.wasCleared = true;
+    }
+  } // end clear function
+
+  /**
+   * Set this.diagram.div to null, removing all event listeners
+   */
   public ngOnDestroy() {
     this.diagram.div = null; // removes event listeners
-  }
+  } // end ngOnDestroy function
 
 }

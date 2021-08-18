@@ -4,10 +4,10 @@ import * as go from "gojs";
 import { DiagramComponent } from "./diagram.component";
 
 /**
- * An interface to allow methods defined below to accept Palette or Diagram Components, 
+ * An interface to allow methods defined below to accept Palette or Diagram Components,
  * without requiring DiagramComponent or PaletteComponent directly in this file
  * (that would create a circular dependency)
- */ 
+ */
 export interface IDiagramOrPaletteComponent {
   modelChange: EventEmitter<go.IncrementalData>,
   zone: NgZone,
@@ -25,9 +25,10 @@ export class NgDiagramHelper{
   /**
    * Ensures mousemove event listeners on a diagram's canvas are run outside NgZone.
    * This way, change detection isn't triggered on each mousemove, improving performance.
+   *
    * If some state-alteration must happen on a mousemove event inside the diagram, use zone.run() to make sure the event triggers angular change detection.
    * Used by DiagramComponent, PaletteComponent, and OverviewComponent in their ngAfterViewInit lifecycle hooks
-   * @param diagram 
+   * @param diagram
    * @param zone
    */
   public static makeMouseMoveRunOutsideAngularZone(diagram: go.Diagram, zone: NgZone) {
@@ -45,10 +46,10 @@ export class NgDiagramHelper{
 
   /**
    * Initialize a given diagram's model with given node / link / model data
-   * @param diagram 
-   * @param nodeDataArray 
-   * @param linkDataArray 
-   * @param modelData 
+   * @param diagram
+   * @param nodeDataArray
+   * @param linkDataArray
+   * @param modelData
    */
   public static initializeModel(diagram: go.Diagram | go.Palette, nodeDataArray: Array<go.ObjectData>, linkDataArray: Array<go.ObjectData>, modelData: go.ObjectData) {
     diagram.delayInitialization(() => {
@@ -74,7 +75,7 @@ export class NgDiagramHelper{
     var diagram = null;
     if (!(component.hasOwnProperty("diagram")) && !(component.hasOwnProperty("palette"))) return;
     if (component.hasOwnProperty("diagram")) diagram = component["diagram"];
-    if (component.hasOwnProperty("palette")) diagram = component["palette"];    
+    if (component.hasOwnProperty("palette")) diagram = component["palette"];
     component.modelChangedListener = (e: go.ChangedEvent) => {
       if (e.isTransactionFinished && e.model && !e.model.isReadOnly && component.modelChange) {
         // this must be done within a NgZone.run block, so changes are detected in the parent component
@@ -89,28 +90,27 @@ export class NgDiagramHelper{
 
   /**
    * Merge the app-level node / link / model data of a supplied Diagram|Palette Component with its underlying Diagram|Palette model data
-   * @param component 
+   * @param component
+   * @param isInit Whether or not to treat this update as a Diagram initialization
    */
-  public static mergeAppDataWithModel(component: IDiagramOrPaletteComponent) {
+  public static mergeAppDataWithModel(component: IDiagramOrPaletteComponent, isInit?: boolean) {
     var diagram = null;
     if (component.hasOwnProperty("diagram")) diagram = component["diagram"];
-    if (component.hasOwnProperty("palette")) diagram = component["palette"]; 
-    // don't need model change listener while performing known data updates
-    const mcl = component instanceof DiagramComponent ? component.modelChangedListener : null;
-    if (mcl !== null) diagram.model.removeChangedListener(mcl);
+    if (component.hasOwnProperty("palette")) diagram = component["palette"];
 
-    diagram.model.startTransaction('update data');
-    // update modelData first, in case bindings on nodes / links depend on model data
-    diagram.model.assignAllDataProperties(diagram.model.modelData, component.modelData);
-    // merge node / link data
-    diagram.model.mergeNodeDataArray(component.nodeDataArray);
-    if (component.linkDataArray && diagram.model instanceof go.GraphLinksModel) {
-      diagram.model.mergeLinkDataArray(component.linkDataArray);
-    }
-    diagram.model.commitTransaction('update data');
+    diagram.model.commit((m: go.Model) => {
+      if (isInit) diagram.model.modelData = {};
+      // update modelData first, in case bindings on nodes / links depend on model data
+      diagram.model.assignAllDataProperties(diagram.model.modelData, component.modelData);
+      // merge node / link data
+      if (isInit) diagram.model.nodeDataArray = [];
+      diagram.model.mergeNodeDataArray(component.nodeDataArray);
+      if (component.linkDataArray && diagram.model instanceof go.GraphLinksModel) {
+        if (isInit) diagram.model.linkDataArray = [];
+        diagram.model.mergeLinkDataArray(component.linkDataArray);
+      }
+    }, isInit ? null : 'update data');
 
-    // reset the model change listener
-    if (mcl !== null) diagram.model.addChangedListener(mcl);
   }
 
 }
