@@ -262,28 +262,29 @@ export class DiagramComponent {
 
     if (this.wasCleared) {
       this.diagram.delayInitialization(() => {
-        this.mergeAppDataWithModel(this, nodeDiffs, linkDiffs, true);
+        this.mergeAppDataWithModel(this, true);
         this.wasCleared = false;
       });
     } else {
-      this.mergeAppDataWithModel(this, nodeDiffs, linkDiffs, false);
+      this.mergeAppDataWithModel(this, false);
     }
 
   } // end ngDoCheck
 
-  private mergeAppDataWithModel(component: DiagramComponent, nodeDiffs, linkDiffs, isInit?: boolean) {
+  private mergeAppDataWithModel(component: DiagramComponent, isInit?: boolean) {
+
     // don't need model change listener while performing known data updates
     if (component.modelChangedListener !== null) this.diagram.model.removeChangedListener(this.modelChangedListener);
 
-    component.diagram.model.startTransaction('update data');
-    // update modelData first, in case bindings on nodes / links depend on model data
-    component.diagram.model.assignAllDataProperties(this.diagram.model.modelData, this.modelData);
-    // merge node / link data
-    this.diagram.model.mergeNodeDataArray(this.nodeDataArray);
-    if (component.linkDataArray && component.diagram.model instanceof go.GraphLinksModel) {
-      component.diagram.model.mergeLinkDataArray(this.linkDataArray);
-    }
-    component.diagram.model.commitTransaction('update data');
+    component.diagram.model.commit((m: go.Model) => {
+      // update modelData first, in case bindings on nodes / links depend on model data
+      component.diagram.model.assignAllDataProperties(this.diagram.model.modelData, this.modelData);
+      // merge node / link data
+      this.diagram.model.mergeNodeDataArray(this.nodeDataArray);
+      if (component.linkDataArray && component.diagram.model instanceof go.GraphLinksModel) {
+        component.diagram.model.mergeLinkDataArray(this.linkDataArray);
+      }
+    }, isInit ? null : 'merge data');
 
     // reset the model change listener
     if (component.modelChangedListener !== null) component.diagram.model.addChangedListener(this.modelChangedListener);
