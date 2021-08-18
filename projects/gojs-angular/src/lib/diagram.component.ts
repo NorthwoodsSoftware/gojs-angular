@@ -110,12 +110,12 @@ export class DiagramComponent {
   } // end ngAfterViewInit
 
   /**
-   * Merges changes from app data into GoJS model data, 
+   * Merges changes from app data into GoJS model data,
    * making sure only actual changes (and not falsely flagged no-ops on array / obj data props) are logged
    * @param component an instance of DiagramComponent or PaletteComponent
    * @param kvchanges The kvchanges object produced by either a node or link Angular differ object
    * @param str "n" for node data changes, "l" for link data changes
-   *  */ 
+   *  */
   public static mergeChanges(component, kvchanges, str): boolean {
 
     // helper function
@@ -193,7 +193,7 @@ export class DiagramComponent {
 
       // handle changed data for nodes / links
       kvchanges.forEachChangedItem((r: KeyValueChangeRecord<string, any>) => {
-        
+
         // ensure "changes" to array / object / enumerable data properties are legit
         const sameVals = compareObjs(r.currentValue, r.previousValue);
 
@@ -232,10 +232,10 @@ export class DiagramComponent {
             }
           }
         }
-        
+
       });
     }
-    
+
   } // end mergeChanges function
 
   /**
@@ -248,7 +248,7 @@ export class DiagramComponent {
 
     // these need to be run each check, even if no merging happens
     // otherwise, they will detect all diffs that happened since last time skipsDiagram was false,
-    // such as remove ops that happened in GoJS when skipsDiagram = true, 
+    // such as remove ops that happened in GoJS when skipsDiagram = true,
     // and then realllllly bad stuff happens (deleting random nodes, updating the wrong Parts)
     // Angular differs are a lot of fun
     var nodeDiffs = this._ndaDiffer.diff(this.nodeDataArray);
@@ -264,7 +264,7 @@ export class DiagramComponent {
       this.diagram.delayInitialization(() => {
         this.mergeAppDataWithModel(this, nodeDiffs, linkDiffs, true);
         this.wasCleared = false;
-      });  
+      });
     } else {
       this.mergeAppDataWithModel(this, nodeDiffs, linkDiffs, false);
     }
@@ -276,17 +276,12 @@ export class DiagramComponent {
     if (component.modelChangedListener !== null) this.diagram.model.removeChangedListener(this.modelChangedListener);
 
     component.diagram.model.startTransaction('update data');
-   // if (isInit) component.diagram.model.modelData = {};
     // update modelData first, in case bindings on nodes / links depend on model data
     component.diagram.model.assignAllDataProperties(this.diagram.model.modelData, this.modelData);
     // merge node / link data
-    // if (isInit) component.diagram.model.nodeDataArray = [];
-    // DiagramComponent.mergeChanges(component, nodeDiffs, "n");
     this.diagram.model.mergeNodeDataArray(this.nodeDataArray);
     if (component.linkDataArray && component.diagram.model instanceof go.GraphLinksModel) {
-      // if (isInit) component.diagram.model.linkDataArray = [];
       component.diagram.model.mergeLinkDataArray(this.linkDataArray);
-      // DiagramComponent.mergeChanges(component, linkDiffs, "l");
     }
     component.diagram.model.commitTransaction('update data');
 
