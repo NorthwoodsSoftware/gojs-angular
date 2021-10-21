@@ -87,12 +87,12 @@ export class PaletteComponent {
     this.palette.delayInitialization(() => {
       const model = this.palette.model;
       model.commit((m: go.Model) => {
+        if (this.modelData) {
+          m.assignAllDataProperties(m.modelData, this.modelData);
+        }
         m.mergeNodeDataArray(m.cloneDeep(this.nodeDataArray));
         if (this.linkDataArray && m instanceof go.GraphLinksModel) {
           m.mergeLinkDataArray(m.cloneDeep(this.linkDataArray));
-        }
-        if (this.modelData) {
-          m.assignAllDataProperties(m.modelData, this.modelData);
         }
       }, null);
     });
@@ -121,7 +121,7 @@ export class PaletteComponent {
 
     // these need to be run each check, even if no merging happens
     // otherwise, they will detect all diffs that happened since last time skipsPaletteUpdate was false,
-    // such as remove ops that happened in GoJS when skipsPaletteUpdate = true, 
+    // such as remove ops that happened in GoJS when skipsPaletteUpdate = true,
     // and then realllllly bad stuff happens (deleting random nodes, updating the wrong Parts)
     // Angular differs are a lot of fun
     var nodeDiffs = this._ndaDiffer.diff(this.nodeDataArray);

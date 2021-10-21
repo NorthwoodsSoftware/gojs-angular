@@ -1,6 +1,6 @@
 {
   "name": "gojs-angular",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "peerDependencies": {
     "@angular/common": ">=11.0.0",
     "@angular/core": ">=11.0.0"

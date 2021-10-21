@@ -85,12 +85,12 @@ export class DiagramComponent {
     this.diagram.delayInitialization(() => {
       const model = this.diagram.model;
       model.commit((m: go.Model) => {
+        if (this.modelData) {
+          m.assignAllDataProperties(m.modelData, this.modelData);
+        }
         m.mergeNodeDataArray(m.cloneDeep(this.nodeDataArray));
         if (this.linkDataArray && m instanceof go.GraphLinksModel) {
           m.mergeLinkDataArray(m.cloneDeep(this.linkDataArray));
-        }
-        if (this.modelData) {
-          m.assignAllDataProperties(m.modelData, this.modelData);
         }
       }, null);
     });
