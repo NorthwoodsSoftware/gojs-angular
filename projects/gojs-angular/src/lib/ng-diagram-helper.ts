@@ -55,12 +55,12 @@ export class NgDiagramHelper{
     diagram.delayInitialization(() => {
       const model = diagram.model;
       model.commit((m: go.Model) => {
+        if (modelData) {
+          m.assignAllDataProperties(m.modelData, modelData);
+        }
         m.mergeNodeDataArray(m.cloneDeep(nodeDataArray));
         if (linkDataArray && m instanceof go.GraphLinksModel) {
           m.mergeLinkDataArray(m.cloneDeep(linkDataArray));
-        }
-        if (modelData) {
-          m.assignAllDataProperties(m.modelData, modelData);
         }
       }, null);
     });
