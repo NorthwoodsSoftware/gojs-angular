@@ -140,7 +140,7 @@
           "configurations": {
             "production": {}
           },
-          "builder": "@angular-devkit/build-ng-packagr:build",
+          "builder": "@angular-devkit/build-angular:ng-packagr",
           "options": {
             "tsConfig": "projects/gojs-angular/tsconfig.lib.json",
             "project": "projects/gojs-angular/ng-package.json"
@@ -168,5 +168,8 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": false
   }
 }

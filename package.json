@@ -8,7 +8,7 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "build-lib": "ng build gojs-angular --prod",
+    "build-lib": "ng build gojs-angular --configuration production",
     "npm-pack": "cd dist/gojs-angular && npm pack",
     "package": "npm run build-lib && npm run npm-pack"
   },
@@ -25,6 +25,7 @@
     "core-js": "^3.6.4",
     "gojs": "^2.1.32",
     "immer": "^9.0.7",
+    "ng-packagr": "^14.1.0",
     "rxjs": "^6.5.4",
     "tslib": "^2.3.1",
     "zone.js": "~0.11.4"
