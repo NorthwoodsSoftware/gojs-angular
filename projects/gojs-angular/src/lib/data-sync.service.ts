@@ -49,12 +49,9 @@ export class DataSyncService {
 
       // account for removed node data
       if (changes.removedNodeKeys) {
-        return draft.filter((nd: go.ObjectData) => {
-          const key = model ? model.getKeyForNodeData(nd) : nd['key'];
-          if (changes.removedNodeKeys.includes(key)) {
-            return false;
-          } 
-          return true;
+        changes.removedNodeKeys.forEach(rnk => {
+          const idx = draft.findIndex(nd => { return model.getKeyForNodeData(nd) == rnk });
+          if (idx >= 0) draft.splice(idx, 1);
         });
       }
     });
@@ -107,11 +104,9 @@ export class DataSyncService {
 
       // account for removed link data
       if (changes.removedLinkKeys) {
-        return draft.filter((ld: go.ObjectData) => {
-          const key = model ? model.getKeyForLinkData(ld) : ld['key'];
-          if (changes.removedLinkKeys.includes(key)) {
-            return false;
-          } return true;
+        changes.removedLinkKeys.forEach(rlk => {
+          const idx = draft.findIndex(ld => { return model.getKeyForLinkData(ld) == rlk });
+          if (idx >= 0) draft.splice(idx, 1);
         });
       }
     });
