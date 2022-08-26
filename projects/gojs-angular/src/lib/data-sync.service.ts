@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import * as go from 'gojs';
-import produce from "immer";
+import produce, { current } from "immer";
 
 @Injectable()
 export class DataSyncService {
@@ -18,6 +18,12 @@ export class DataSyncService {
 
     // maintain a map of modified nodes for fast lookup during insertion
     const modifiedNodesMap = new go.Map<go.Key, go.ObjectData>();
+    // generate a map of keys -> indices for faster operations
+    const keyIdxMap = new Map<go.Key, number>();
+    nodeData.forEach((nd, idx) => {
+      const key = model ? model.getKeyForNodeData(nd) : nd['key'];
+      keyIdxMap.set(key, idx);
+    });
 
     // nodeData is immutable, modify it using the immer package's "produce" function (creates new array)
     var newNodeDataArray = produce(nodeData, (draft) => {
@@ -27,12 +33,9 @@ export class DataSyncService {
           // Get the value of the node key property checking wether is a function or a string
           const key = model ? model.getKeyForNodeData(nd) : nd['key'];
           modifiedNodesMap.set(key, nd);
-          for (let i = 0; i < nodeData.length; i++) {
-            const ndEntry = nodeData[i];
-            const keyNdEntry = model ? model.getKeyForNodeData(ndEntry) : ndEntry['key'];
-            if (keyNdEntry === key) {
-              draft[i] = nd;
-            }
+          const idx = keyIdxMap.get(key);
+          if (idx !== undefined && idx >= 0) {
+            draft[idx] = nd;
           }
         });
       }
@@ -41,7 +44,7 @@ export class DataSyncService {
       if (changes.insertedNodeKeys) {
         changes.insertedNodeKeys.forEach((key: go.Key) => {
           const nd = modifiedNodesMap.get(key);
-          if (nd) {
+          if (nd && !keyIdxMap.has(key)) {
             draft.push(nd);
           }
         });
@@ -49,10 +52,10 @@ export class DataSyncService {
 
       // account for removed node data
       if (changes.removedNodeKeys) {
-        changes.removedNodeKeys.forEach(rnk => {
-          const idx = draft.findIndex(nd => { return model.getKeyForNodeData(nd) == rnk });
-          if (idx >= 0) draft.splice(idx, 1);
-        });
+        const removals = changes.removedNodeKeys.map(key => keyIdxMap.get(key)).sort();
+        for (let i = removals.length - 1; i >= 0; i--) {
+          draft.splice(removals[i], 1);
+        }
       }
     });
 
@@ -72,6 +75,12 @@ export class DataSyncService {
 
     // maintain a map of modified nodes for fast lookup during insertion
     const modifiedLinksMap = new go.Map<go.Key, go.ObjectData>();
+    // generate a map of keys -> indices for faster operations
+    const keyIdxMap = new Map<go.Key, number>();
+    linkData.forEach((ld, idx) => {
+      const key = model ? model.getKeyForLinkData(ld) : ld['key'];
+      keyIdxMap.set(key, idx);
+    });
 
     // linkData is immutable, modify it using the immer package's "produce" function (creates new array)
     linkData = produce(linkData, draft => {
@@ -81,13 +90,9 @@ export class DataSyncService {
           // Get the value of the link key
           const key = model ? model.getKeyForLinkData(ld) : ld['key'];
           modifiedLinksMap.set(key, ld);
-
-          for (let i = 0; i < linkData.length; i++) {
-            const ldEntry = linkData[i];
-            const keyLdEntry = model ? model.getKeyForLinkData(ldEntry) : ldEntry['key'];
-            if (keyLdEntry === key) {
-              draft[i] = ld;
-            }
+          const idx = keyIdxMap.get(key);
+          if (idx !== undefined && idx >= 0) {
+            draft[idx] = ld;
           }
         });
       }
@@ -96,7 +101,7 @@ export class DataSyncService {
       if (changes.insertedLinkKeys) {
         changes.insertedLinkKeys.forEach((key: go.Key) => {
           const nd = modifiedLinksMap.get(key);
-          if (nd) {
+          if (nd && !keyIdxMap.has(key)) {
             draft.push(nd);
           }
         });
@@ -104,10 +109,10 @@ export class DataSyncService {
 
       // account for removed link data
       if (changes.removedLinkKeys) {
-        changes.removedLinkKeys.forEach(rlk => {
-          const idx = draft.findIndex(ld => { return model.getKeyForLinkData(ld) == rlk });
-          if (idx >= 0) draft.splice(idx, 1);
-        });
+        const removals = changes.removedLinkKeys.map(key => keyIdxMap.get(key)).sort();
+        for (let i = removals.length - 1; i >= 0; i--) {
+          draft.splice(removals[i], 1);
+        }
       }
     });
 
