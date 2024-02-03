@@ -52,7 +52,8 @@ export class DataSyncService {
 
       // account for removed node data
       if (changes.removedNodeKeys) {
-        const removals = changes.removedNodeKeys.map(key => keyIdxMap.get(key)).sort();
+        const removals = changes.removedNodeKeys.map(key => keyIdxMap.get(key)) as number[];
+        removals.sort((a, b) => a - b);
         for (let i = removals.length - 1; i >= 0; i--) {
           draft.splice(removals[i], 1);
         }
@@ -109,7 +110,8 @@ export class DataSyncService {
 
       // account for removed link data
       if (changes.removedLinkKeys) {
-        const removals = changes.removedLinkKeys.map(key => keyIdxMap.get(key)).sort();
+        const removals = changes.removedLinkKeys.map(key => keyIdxMap.get(key)) as number[];
+        removals.sort((a, b) => a - b);
         for (let i = removals.length - 1; i >= 0; i--) {
           draft.splice(removals[i], 1);
         }
