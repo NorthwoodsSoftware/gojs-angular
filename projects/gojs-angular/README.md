@@ -7,7 +7,10 @@ The implementation for these components is inside the projects/gojs-angular fold
 See the [gojs-angular-basic project](https://github.com/NorthwoodsSoftware/gojs-angular-basic) for example usage and the
 [Intro page on using GoJS with Angular](https://gojs.net/latest/intro/angular.html) for more information.
 
-Version 2.0 expects immutability of all @Input properties to Diagram|Palette|Overview components, and removes `skipsPaletteUpdate` and `modelChange` properties from PaletteComponent. 
+Version 2.0 expects immutability of all @Input properties to Diagram|Palette|Overview components, and removes `skipsPaletteUpdate` and `modelChange` properties from PaletteComponent.
+
+Version 2.0.8 has been updated to use the latest GoJS version 2.3, but your app can use GoJS version 3
+if you want the latest features and performance improvements.  gojs-angular also now uses Immer version 10.
 
 ## Installation
 
@@ -71,26 +74,23 @@ properties and centered content will be created.
 
 ```js
 function initDiagram() {
-  const $ = go.GraphObject.make;
-
-  const diagram = $(go.Diagram,
-    {
+  const diagram = new go.Diagram(null, {
       'undoManager.isEnabled': true,
-      model: $(go.GraphLinksModel, {
+      model: new go.GraphLinksModel({
         linkKeyProperty: 'key'  // this should always be set when using a GraphLinksModel
       })
     });
 
   diagram.nodeTemplate =
-    $(go.Node, 'Auto',  // the Shape will go around the TextBlock
-      $(go.Shape, 'RoundedRectangle', { strokeWidth: 0, fill: 'white' },
-        // Shape.fill is bound to Node.data.color
-        new go.Binding('fill', 'color')),
-      $(go.TextBlock,
-        { margin: 8 },  // some room around the text
-        // TextBlock.text is bound to Node.data.key
-        new go.Binding('text', 'key'))
-    );
+    new go.Node('Auto')  // the Shape will go around the TextBlock
+      .add(
+        new go.Shape('RoundedRectangle', { strokeWidth: 0, fill: 'white' })
+          // Shape.fill is bound to Node.data.color
+          .bind('fill', 'color'),
+        new go.TextBlock({ margin: 8 })  // some room around the text
+          // TextBlock.text is bound to Node.data.key
+          .bind('text', 'key')
+      );
 
   return diagram;
 }

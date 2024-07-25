@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import * as go from 'gojs';
-import produce, { current } from "immer";
+import { produce, current } from "immer";
 
 @Injectable()
 export class DataSyncService {
