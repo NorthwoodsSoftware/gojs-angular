@@ -55,7 +55,8 @@ export class DataSyncService {
         const removals = changes.removedNodeKeys.map(key => keyIdxMap.get(key)) as number[];
         removals.sort((a, b) => a - b);
         for (let i = removals.length - 1; i >= 0; i--) {
-          draft.splice(removals[i], 1);
+          const idx = removals[i];
+          if (idx !== undefined) draft.splice(idx, 1);
         }
       }
     });
