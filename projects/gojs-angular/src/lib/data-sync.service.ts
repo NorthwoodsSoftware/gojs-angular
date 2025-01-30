@@ -1,10 +1,9 @@
 import { Injectable } from '@angular/core';
 import * as go from 'gojs';
-import { produce, current } from "immer";
+import { produce } from 'immer';
 
 @Injectable()
 export class DataSyncService {
-
   /**
    * Sync a node data array with a set of changes
    * @param changes The set of changes to the GoJS model
@@ -12,9 +11,18 @@ export class DataSyncService {
    * @param model Required if you have defined your model.nodeKeyProperty to be something other than 'key'
    * @returns A node data array, merged with the changes
    */
-  public static syncNodeData(changes: go.IncrementalData, nodeData: Array<go.ObjectData>, model?: go.Model) {
+  public static syncNodeData(
+    changes: go.IncrementalData,
+    nodeData: Array<go.ObjectData>,
+    model?: go.Model
+  ) {
     if (!changes) return nodeData;
-    if (!changes.modifiedNodeData && !changes.insertedNodeKeys && !changes.removedNodeKeys) return nodeData;
+    if (
+      !changes.modifiedNodeData &&
+      !changes.insertedNodeKeys &&
+      !changes.removedNodeKeys
+    )
+      return nodeData;
 
     // maintain a map of modified nodes for fast lookup during insertion
     const modifiedNodesMap = new go.Map<go.Key, go.ObjectData>();
@@ -52,7 +60,9 @@ export class DataSyncService {
 
       // account for removed node data
       if (changes.removedNodeKeys) {
-        const removals = changes.removedNodeKeys.map(key => keyIdxMap.get(key)) as number[];
+        const removals = changes.removedNodeKeys.map((key) =>
+          keyIdxMap.get(key)
+        ) as number[];
         removals.sort((a, b) => a - b);
         for (let i = removals.length - 1; i >= 0; i--) {
           const idx = removals[i];
@@ -71,9 +81,18 @@ export class DataSyncService {
    * @param model Required if you have defined your model.linkKeyProperty to be something other than 'key'
    * @returns A link data array, merged with the changes
    */
-  public static syncLinkData(changes: go.IncrementalData, linkData: Array<go.ObjectData>, model?: go.GraphLinksModel) {
+  public static syncLinkData(
+    changes: go.IncrementalData,
+    linkData: Array<go.ObjectData>,
+    model?: go.GraphLinksModel
+  ) {
     if (!changes) return linkData;
-    if (!changes.modifiedLinkData && !changes.insertedLinkKeys && !changes.removedLinkKeys) return linkData;
+    if (
+      !changes.modifiedLinkData &&
+      !changes.insertedLinkKeys &&
+      !changes.removedLinkKeys
+    )
+      return linkData;
 
     // maintain a map of modified nodes for fast lookup during insertion
     const modifiedLinksMap = new go.Map<go.Key, go.ObjectData>();
@@ -85,7 +104,7 @@ export class DataSyncService {
     });
 
     // linkData is immutable, modify it using the immer package's "produce" function (creates new array)
-    linkData = produce(linkData, draft => {
+    linkData = produce(linkData, (draft) => {
       // account for modified link data
       if (changes.modifiedLinkData) {
         changes.modifiedLinkData.forEach((ld: go.ObjectData) => {
@@ -111,7 +130,9 @@ export class DataSyncService {
 
       // account for removed link data
       if (changes.removedLinkKeys) {
-        const removals = changes.removedLinkKeys.map(key => keyIdxMap.get(key)) as number[];
+        const removals = changes.removedLinkKeys.map((key) =>
+          keyIdxMap.get(key)
+        ) as number[];
         removals.sort((a, b) => a - b);
         for (let i = removals.length - 1; i >= 0; i--) {
           draft.splice(removals[i], 1);
@@ -128,13 +149,15 @@ export class DataSyncService {
    * @param modelData The modelData to merge these changes with
    * @returns A modelData object, merged with the changes
    */
-  public static syncModelData(changes: go.IncrementalData, modelData: go.ObjectData) {
+  public static syncModelData(
+    changes: go.IncrementalData,
+    modelData: go.ObjectData
+  ) {
     if (!changes) return modelData;
     if (!changes.modelData) return modelData;
     if (changes.modelData) {
       return changes.modelData;
     }
+    return modelData;
   }
-
-
 }

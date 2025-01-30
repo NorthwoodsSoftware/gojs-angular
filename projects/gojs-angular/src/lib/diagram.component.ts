@@ -1,13 +1,21 @@
-import { Component, ElementRef, EventEmitter, Input, NgZone, Output, ViewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  NgZone,
+  Output,
+  ViewChild,
+} from '@angular/core';
 import * as go from 'gojs';
 import { NgDiagramHelper } from './ng-diagram-helper';
 
 @Component({
   selector: 'gojs-diagram',
-  template: '<div #ngDiagram [className]=divClassName></div>'
+  template: '<div #ngDiagram [className]=divClassName></div>',
+  standalone: true,
 })
 export class DiagramComponent {
-
   /**
    * Diagram initialization function. Returns a go.Diagram.
    * Do not initialize model data in this function.
@@ -26,7 +34,8 @@ export class DiagramComponent {
   /** Whether or not to skip merging app data with GoJS model data (set to true if update is coming from GoJS, false if coming from app-level, usually) */
   @Input() public skipsDiagramUpdate: boolean = false;
   /** Event emitter -- fires when diagram model changes. Capture this emitted event in parent component */
-  @Output() public modelChange: EventEmitter<go.IncrementalData> = new EventEmitter<go.IncrementalData>();
+  @Output() public modelChange: EventEmitter<go.IncrementalData> =
+    new EventEmitter<go.IncrementalData>();
   /** The DIV element holding the Diagram */
   @ViewChild('ngDiagram', { static: true }) public diagramDiv: ElementRef;
   /** The Diagram itself */
@@ -34,18 +43,18 @@ export class DiagramComponent {
   /** An internal flag used to tell ngOnChanges to treat the next sync operation as a Diagram initialization */
   private wasCleared = false;
 
-  constructor(public zone: NgZone) {  }
+  constructor(public zone: NgZone) {}
 
   /**
    * Initializes diagram / model after view init
    */
   public ngAfterViewInit() {
     if (!this.diagramDiv) {
-      throw new Error("diagramDiv is not defined");
+      throw new Error('diagramDiv is not defined');
     }
     this.diagram = this.initDiagram();
     if (!(this.diagram instanceof go.Diagram)) {
-      throw new Error("initDiagram function did not return a go.Diagram");
+      throw new Error('initDiagram function did not return a go.Diagram');
     }
 
     // reduces change detection on mouse moves, boosting performance
@@ -58,7 +67,12 @@ export class DiagramComponent {
     this.diagram.div = divRef;
 
     // initialize the diagram model with the provided node / link / model data
-    NgDiagramHelper.initializeModel(this.diagram, this.nodeDataArray, this.linkDataArray, this.modelData);
+    NgDiagramHelper.initializeModel(
+      this.diagram,
+      this.nodeDataArray,
+      this.linkDataArray,
+      this.modelData
+    );
     // initializer model listener
     NgDiagramHelper.initializeModelChangedListener(this);
   } // end ngAfterViewInit
@@ -84,7 +98,7 @@ export class DiagramComponent {
    * Also clears the UndoManager history and clipboard.
    * The next state update will be treated as diagram initialization.
    */
-   public clear(): void {
+  public clear(): void {
     const diagram = this.diagram;
     if (diagram !== null) {
       diagram.clear();
@@ -98,5 +112,4 @@ export class DiagramComponent {
   public ngOnDestroy() {
     this.diagram.div = null; // removes event listeners
   } // end ngOnDestroy function
-
 }
