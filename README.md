@@ -2,9 +2,9 @@
 
 ## By Northwoods Software for [GoJS](https://gojs.net)
 
-### This component is only needed if you have
+### This component is not needed to use GoJS in Angular. It is meant to simplify usage of GoJS when you have the constraint of immutable models. [See here fore more about using GoJS with Angular](https://gojs.net/latest/intro/angular.html).
 
-This project provides Angular components for [GoJS](https://gojs.net/latest/index.html) Diagrams, Palettes, and Overviews to simplify usage of GoJS within an Angular application.
+This project provides Angular components for [GoJS](https://gojs.net/latest/index.html) Diagrams, Palettes, and Overviews to simplify usage of GoJS within an Angular application. It also implements a DataSyncService to merge changes with model data.
 The implementation for these components is inside the projects/gojs-angular folder.
 See the [gojs-angular-basic project](https://github.com/NorthwoodsSoftware/gojs-angular-basic) for example usage and the
 [Intro page on using GoJS with Angular](https://gojs.net/latest/intro/angular.html) for more information.
@@ -26,7 +26,7 @@ npm install --save gojs-angular
 If you want to change how the GoJS / Angular components are implemented, you will need to edit the files in `projects/gojs-angular`, then, from the main directory, run
 
 ```bash
-npm run package
+npm run build
 ```
 
 which will create a new package in the folder, dist/angular-gojs, for you to use. Currently, gojs-angular depends on TypeScript and [immer](https://github.com/immerjs/immer).
