@@ -1,5 +1,4 @@
-import { NgZone } from "@angular/core";
-import { EventEmitter } from "events";
+import { NgZone, EventEmitter } from "@angular/core";
 import * as go from "gojs";
 import { DiagramComponent } from "./diagram.component";
 
