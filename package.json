@@ -11,7 +11,7 @@
   "private": true,
   "dependencies": {
     "gojs": ">=2.3.0",
-    "immer": "^10.1.1",
+    "immer": "^11.1.3",
     "@angular/animations": "20.0.7",
     "@angular/common": "20.0.7",
     "@angular/compiler": "20.0.7",
