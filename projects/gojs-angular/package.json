@@ -1,11 +1,11 @@
 {
   "name": "gojs-angular",
-  "version": "2.1.3",
+  "version": "20.0.0",
   "peerDependencies": {
-    "@angular/common": ">=20.0.5",
-    "@angular/core": ">=20.0.5",
+    "@angular/common": ">=20.0.7",
+    "@angular/core": ">=20.0.7",
     "gojs": ">=3.0.18",
-    "immer": "^10.1.1"
+    "immer": "^11.1.3"
   },
   "dependencies": {
     "tslib": "^2.3.0"
